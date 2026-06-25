@@ -1,6 +1,19 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import type { Editor } from "@tiptap/core";
+  import Pause from "@lucide/svelte/icons/pause";
+  import Play from "@lucide/svelte/icons/play";
+  import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
+  import {
+    formatTime,
+    initialPomodoroState,
+    pomodoroPrimaryActionLabel,
+    pomodoroStatus,
+    resetPomodoro,
+    tickPomodoro,
+    togglePomodoro,
+    type PomodoroState,
+  } from "$lib/pomodoro/timer";
 
   type Pin = {
     id: number;
@@ -16,8 +29,15 @@
   let editorElement = $state<HTMLDivElement>();
   let dailyNoteHtml = $state("");
   let editor: Editor | null = null;
+  let pomodoroState = $state<PomodoroState>(initialPomodoroState());
+  let timerInterval: ReturnType<typeof setInterval> | null = null;
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
+  const formattedRemainingTime = $derived(
+    formatTime(pomodoroState.remainingSeconds),
+  );
+  const timerStatus = $derived(pomodoroStatus(pomodoroState));
+  const timerActionLabel = $derived(pomodoroPrimaryActionLabel(pomodoroState));
 
   onMount(async () => {
     if (!editorElement || editor) {
@@ -68,6 +88,7 @@
   });
 
   onDestroy(() => {
+    stopTimer();
     editor?.destroy();
     editor = null;
   });
@@ -85,6 +106,46 @@
 
   function archivePin(id: number) {
     pins = pins.filter((pin) => pin.id !== id);
+  }
+
+  function toggleTimer() {
+    pomodoroState = togglePomodoro(pomodoroState);
+    syncTimerInterval();
+  }
+
+  function resetTimer() {
+    pomodoroState = resetPomodoro(pomodoroState.durationSeconds);
+    stopTimer();
+  }
+
+  function syncTimerInterval() {
+    if (!pomodoroState.running) {
+      stopTimer();
+      return;
+    }
+
+    if (timerInterval) {
+      return;
+    }
+
+    timerInterval = setInterval(() => {
+      const result = tickPomodoro(pomodoroState);
+
+      pomodoroState = result.state;
+
+      if (result.completed) {
+        stopTimer();
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (!timerInterval) {
+      return;
+    }
+
+    clearInterval(timerInterval);
+    timerInterval = null;
   }
 </script>
 
@@ -109,14 +170,39 @@
           <h2>Pomodoro</h2>
         </header>
 
-        <div class="timer-face" aria-label="25 minutes remaining">
-          <span>25:00</span>
-          <small>Ready</small>
-        </div>
+        <div
+          class="timer-face"
+          aria-label={`${formattedRemainingTime} remaining`}
+        >
+          <div class="timer-copy">
+            <span>{formattedRemainingTime}</span>
+            <small>{timerStatus}</small>
+          </div>
 
-        <div class="timer-actions" aria-label="Pomodoro controls">
-          <button type="button">Start</button>
-          <button type="button">Reset</button>
+          <div class="timer-actions" aria-label="Pomodoro controls">
+            <button
+              class="icon-button"
+              type="button"
+              aria-label={timerActionLabel}
+              title={timerActionLabel}
+              onclick={toggleTimer}
+            >
+              {#if pomodoroState.running}
+                <Pause size={16} strokeWidth={2.2} aria-hidden="true" />
+              {:else}
+                <Play size={16} strokeWidth={2.2} aria-hidden="true" />
+              {/if}
+            </button>
+            <button
+              class="icon-button"
+              type="button"
+              aria-label="Reset"
+              title="Reset"
+              onclick={resetTimer}
+            >
+              <RotateCcw size={16} strokeWidth={2.2} aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -412,19 +498,27 @@
   }
 
   .timer-face {
-    display: grid;
-    min-height: 104px;
-    place-items: center;
-    align-content: center;
-    gap: 6px;
+    display: flex;
+    min-height: 84px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
     border: 1px solid rgba(43, 41, 36, 0.12);
     border-radius: 8px;
     background: #fffdf8;
   }
 
+  .timer-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+  }
+
   .timer-face span {
     font-variant-numeric: tabular-nums;
-    font-size: 2rem;
+    font-size: 1.9rem;
     font-weight: 740;
     line-height: 1;
   }
@@ -437,5 +531,15 @@
   .timer-actions {
     display: flex;
     gap: 8px;
+  }
+
+  .icon-button {
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
   }
 </style>

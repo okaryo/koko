@@ -111,12 +111,12 @@ Pin decisions:
 
 ## Phase 4 - Pomodoro Timer
 
-- [ ] Port or reimplement Pomodoro state logic from Current
+- [x] Port or reimplement Pomodoro state logic from Current
 - [ ] Create compact Pomodoro UI
-- [ ] Start timer
-- [ ] Pause timer
-- [ ] Reset timer
-- [ ] Display remaining time
+- [x] Start timer
+- [x] Pause timer
+- [x] Reset timer
+- [x] Display remaining time
 - [ ] Add keyboard shortcuts
 - [ ] Add completion notification
 - [ ] Add focus and completion sounds
