@@ -14,6 +14,7 @@
     createPin as createPersistedPin,
     listPins,
     type Pin,
+    updatePinBody,
   } from "$lib/api/pins";
   import { pomodoroCommandFromKeydown } from "$lib/keyboard";
   import {
@@ -43,6 +44,8 @@
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
+  let editingPinId = $state<number | null>(null);
+  let editingPinBody = $state("");
   const formattedRemainingTime = $derived(
     formatTime(pomodoroState.remainingSeconds),
   );
@@ -155,6 +158,47 @@
       pins = pins.filter((pin) => pin.id !== id);
     } catch (error) {
       console.warn("Pin archive failed", error);
+    }
+  }
+
+  function startEditingPin(pin: Pin) {
+    editingPinId = pin.id;
+    editingPinBody = pin.body;
+  }
+
+  function cancelEditingPin() {
+    editingPinId = null;
+    editingPinBody = "";
+  }
+
+  async function saveEditingPin() {
+    if (editingPinId === null) {
+      return;
+    }
+
+    const body = editingPinBody.trim();
+
+    if (!body) {
+      return;
+    }
+
+    if (!isTauriRuntime()) {
+      pins = pins.map((pin) =>
+        pin.id === editingPinId
+          ? { ...pin, body, updatedAtMs: Date.now() }
+          : pin,
+      );
+      cancelEditingPin();
+      return;
+    }
+
+    try {
+      const updatedPin = await updatePinBody(editingPinId, body, Date.now());
+
+      pins = pins.map((pin) => (pin.id === updatedPin.id ? updatedPin : pin));
+      cancelEditingPin();
+    } catch (error) {
+      console.warn("Pin update failed", error);
     }
   }
 
@@ -377,10 +421,29 @@
           {:else}
             {#each pins as pin (pin.id)}
               <article class="pin">
-                <p>{pin.body}</p>
-                <button type="button" onclick={() => archivePin(pin.id)}>
-                  Archive
-                </button>
+                {#if editingPinId === pin.id}
+                  <textarea
+                    bind:value={editingPinBody}
+                    rows="3"
+                    aria-label="Edit pin"
+                  ></textarea>
+                  <div class="pin-actions">
+                    <button type="button" onclick={saveEditingPin}>Save</button>
+                    <button type="button" onclick={cancelEditingPin}>
+                      Cancel
+                    </button>
+                  </div>
+                {:else}
+                  <p>{pin.body}</p>
+                  <div class="pin-actions">
+                    <button type="button" onclick={() => startEditingPin(pin)}>
+                      Edit
+                    </button>
+                    <button type="button" onclick={() => archivePin(pin.id)}>
+                      Archive
+                    </button>
+                  </div>
+                {/if}
               </article>
             {/each}
           {/if}
@@ -639,6 +702,18 @@
 
   .pin button:hover {
     background: rgba(74, 68, 56, 0.08);
+  }
+
+  .pin textarea {
+    min-height: 76px;
+    padding: 9px;
+    background: rgba(255, 253, 248, 0.76);
+  }
+
+  .pin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .timer-face {

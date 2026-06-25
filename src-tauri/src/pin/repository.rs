@@ -38,6 +38,32 @@ pub fn create(connection: &Connection, body: &str, now_ms: i64) -> Result<Pin, S
     find_by_id(connection, id)?.ok_or_else(|| "Failed to load created Pin.".to_string())
 }
 
+pub fn update_body(
+    connection: &Connection,
+    id: u32,
+    body: &str,
+    now_ms: i64,
+) -> Result<Pin, String> {
+    let updated_rows = connection
+        .execute(
+            "
+            UPDATE pins
+            SET body = ?1,
+                updated_at_ms = ?2
+            WHERE id = ?3
+              AND archived_at_ms IS NULL
+            ",
+            params![body, now_ms, id],
+        )
+        .map_err(|error| format!("Failed to update Pin: {error}"))?;
+
+    if updated_rows == 0 {
+        return Err(format!("Active Pin {id} was not found."));
+    }
+
+    find_by_id(connection, id)?.ok_or_else(|| format!("Pin {id} was not found."))
+}
+
 pub fn archive(connection: &Connection, id: u32, now_ms: i64) -> Result<Pin, String> {
     let updated_rows = connection
         .execute(
@@ -135,5 +161,17 @@ mod tests {
 
         assert_eq!(archived.archived_at_ms, Some(2000));
         assert_eq!(archived.updated_at_ms, 2000);
+    }
+
+    #[test]
+    fn updates_pin_body() {
+        let connection = migrated_connection();
+        let pin = create(&connection, "Before", 1000).expect("create pin");
+
+        let updated = update_body(&connection, pin.id, "After", 2000).expect("update pin");
+
+        assert_eq!(updated.body, "After");
+        assert_eq!(updated.updated_at_ms, 2000);
+        assert_eq!(updated.archived_at_ms, None);
     }
 }

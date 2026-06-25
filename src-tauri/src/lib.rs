@@ -16,6 +16,7 @@ pub fn run() {
             daily_note::commands::update_daily_note_body,
             pin::commands::list_pins,
             pin::commands::create_pin,
+            pin::commands::update_pin_body,
             pin::commands::archive_pin,
         ])
         .run(tauri::generate_context!())

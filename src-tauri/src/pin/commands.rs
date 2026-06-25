@@ -18,6 +18,13 @@ pub fn create_pin(app: AppHandle, body: String, now_ms: i64) -> Result<Pin, Stri
 }
 
 #[tauri::command]
+pub fn update_pin_body(app: AppHandle, id: u32, body: String, now_ms: i64) -> Result<Pin, String> {
+    let connection = db::open(&app)?;
+
+    repository::update_body(&connection, id, body.trim(), now_ms)
+}
+
+#[tauri::command]
 pub fn archive_pin(app: AppHandle, id: u32, now_ms: i64) -> Result<Pin, String> {
     let connection = db::open(&app)?;
 

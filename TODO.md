@@ -93,7 +93,7 @@ Daily workspace decisions:
 - [x] Persist Pins in SQLite
 - [ ] Create visible Pins UI
 - [x] Create Pin
-- [ ] Edit Pin
+- [x] Edit Pin
 - [x] Archive Pin
 - [ ] Add keyboard-first Pin navigation
 - [ ] Add keyboard shortcut for creating a Pin
