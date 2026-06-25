@@ -45,16 +45,16 @@ Open product questions:
 
 ## Phase 1 - Project Setup
 
-- [ ] Create Tauri + Svelte project
-- [ ] Setup TypeScript
-- [ ] Setup SvelteKit static adapter
+- [x] Create Tauri + Svelte project
+- [x] Setup TypeScript
+- [x] Setup SvelteKit static adapter
 - [x] Add Tiptap dependencies
 - [ ] Setup linting and formatting
 - [ ] Setup Vitest
-- [ ] Setup Rust crate structure
-- [ ] Setup Tauri capabilities
-- [ ] Setup basic window configuration
-- [ ] Decide package manager and pin version
+- [x] Setup Rust crate structure
+- [x] Setup Tauri capabilities
+- [x] Setup basic window configuration
+- [x] Decide package manager and pin version
 - [ ] Add CI checks
 
 Setup decisions:
@@ -66,10 +66,10 @@ Setup decisions:
 
 ## Phase 2 - DailyNote Workspace
 
-- [ ] Create DailyNote model
+- [x] Create DailyNote model
 - [x] Create main Tiptap editor UI
-- [ ] Persist the active DailyNote locally
-- [ ] Load the active DailyNote on launch
+- [x] Persist the active DailyNote locally
+- [x] Load the active DailyNote on launch
 - [ ] Add explicit "Start today's note" action
 - [ ] Add unsaved/error state handling if needed
 - [ ] Add keyboard-first editor focus behavior
@@ -157,10 +157,10 @@ Keyboard decisions:
 ## Phase 6 - Persistence
 
 - [x] Choose local persistence approach: SQLite
-- [ ] Implement DailyNote repository
+- [x] Implement DailyNote repository
 - [ ] Implement Pin repository
 - [ ] Implement settings repository
-- [ ] Add SQLite migrations
+- [x] Add SQLite migrations
 - [ ] Add backup/export-friendly data shape
 
 Persistence decisions:
@@ -185,7 +185,7 @@ Decision criteria:
 - [ ] Add tests for DailyNote lifecycle logic
 - [ ] Add tests for Pin behavior
 - [ ] Add tests for Pomodoro state transitions
-- [ ] Add Rust tests for persistence logic
+- [x] Add Rust tests for persistence logic
 - [ ] Add a small manual keyboard workflow checklist
 
 Testing decisions:

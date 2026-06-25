@@ -4,6 +4,11 @@
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
+  import {
+    getOrCreateDailyNote,
+    updateDailyNoteBody,
+    type DailyNote,
+  } from "$lib/api/dailyNotes";
   import { pomodoroCommandFromKeydown } from "$lib/keyboard";
   import {
     formatTime,
@@ -26,12 +31,15 @@
     month: "short",
     day: "numeric",
   }).format(new Date());
+  const activeNoteDate = formatLocalDate(new Date());
 
   let editorElement = $state<HTMLDivElement>();
   let dailyNoteHtml = $state("");
   let editor: Editor | null = null;
+  let activeDailyNote = $state<DailyNote | null>(null);
   let pomodoroState = $state<PomodoroState>(initialPomodoroState());
   let timerInterval: ReturnType<typeof setInterval> | null = null;
+  let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
   const formattedRemainingTime = $derived(
@@ -44,6 +52,9 @@
     if (!editorElement || editor) {
       return;
     }
+
+    activeDailyNote = await loadActiveDailyNote();
+    dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
 
     const [
       { Editor },
@@ -65,6 +76,7 @@
 
     editor = new Editor({
       element: editorElement,
+      content: dailyNoteHtml,
       extensions: [
         StarterKit,
         TaskList,
@@ -83,13 +95,17 @@
         },
       },
       onUpdate: ({ editor: updatedEditor }) => {
-        dailyNoteHtml = updatedEditor.getHTML();
+        const bodyHtml = updatedEditor.getHTML();
+
+        dailyNoteHtml = bodyHtml;
+        scheduleDailyNoteSave(bodyHtml);
       },
     });
   });
 
   onDestroy(() => {
     stopTimer();
+    clearDailyNoteSaveTimeout();
     editor?.destroy();
     editor = null;
   });
@@ -164,6 +180,68 @@
 
     clearInterval(timerInterval);
     timerInterval = null;
+  }
+
+  async function loadActiveDailyNote() {
+    if (!isTauriRuntime()) {
+      return null;
+    }
+
+    try {
+      return await getOrCreateDailyNote(activeNoteDate, Date.now());
+    } catch (error) {
+      console.warn("DailyNote load failed", error);
+      return null;
+    }
+  }
+
+  function scheduleDailyNoteSave(bodyHtml: string) {
+    if (!activeDailyNote || !isTauriRuntime()) {
+      return;
+    }
+
+    clearDailyNoteSaveTimeout();
+
+    dailyNoteSaveTimeout = setTimeout(() => {
+      void saveDailyNoteBody(bodyHtml);
+    }, 500);
+  }
+
+  async function saveDailyNoteBody(bodyHtml: string) {
+    if (!activeDailyNote) {
+      return;
+    }
+
+    try {
+      activeDailyNote = await updateDailyNoteBody(
+        activeDailyNote.id,
+        bodyHtml,
+        Date.now(),
+      );
+    } catch (error) {
+      console.warn("DailyNote save failed", error);
+    }
+  }
+
+  function clearDailyNoteSaveTimeout() {
+    if (!dailyNoteSaveTimeout) {
+      return;
+    }
+
+    clearTimeout(dailyNoteSaveTimeout);
+    dailyNoteSaveTimeout = null;
+  }
+
+  function formatLocalDate(date: Date) {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, "0");
+    const day = `${date.getDate()}`.padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function isTauriRuntime() {
+    return "__TAURI_INTERNALS__" in window;
   }
 </script>
 
