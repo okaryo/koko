@@ -112,12 +112,12 @@ Pin decisions:
 ## Phase 4 - Pomodoro Timer
 
 - [x] Port or reimplement Pomodoro state logic from Current
-- [ ] Create compact Pomodoro UI
+- [x] Create compact Pomodoro UI
 - [x] Start timer
 - [x] Pause timer
 - [x] Reset timer
 - [x] Display remaining time
-- [ ] Add keyboard shortcuts
+- [x] Add keyboard shortcuts
 - [ ] Add completion notification
 - [ ] Add focus and completion sounds
 - [ ] Add Pomodoro sound volume settings
@@ -135,9 +135,9 @@ Pomodoro decisions:
 
 ## Phase 5 - Keyboard Workflow
 
-- [ ] Define app-wide shortcuts
+- [x] Define app-wide shortcuts
 - [ ] Define editor shortcuts
-- [ ] Define Pomodoro shortcuts
+- [x] Define Pomodoro shortcuts
 - [ ] Define Pin shortcuts
 - [ ] Add keyboard shortcut help
 - [ ] Ensure focus behavior is predictable
@@ -149,6 +149,8 @@ Keyboard decisions:
 - Shortcut design should prioritize writing flow over app navigation.
 - Current's keyboard handling is a useful reference, but koko has fewer sections.
 - All major DailyNote, Pin, and Pomodoro operations must be keyboard-accessible.
+- `Cmd+Shift+P`: start, pause, or continue Pomodoro.
+- `Cmd+Shift+R`: reset Pomodoro.
 
 ---
 

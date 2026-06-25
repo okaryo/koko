@@ -4,6 +4,7 @@
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
+  import { pomodoroCommandFromKeydown } from "$lib/keyboard";
   import {
     formatTime,
     initialPomodoroState,
@@ -108,6 +109,23 @@
     pins = pins.filter((pin) => pin.id !== id);
   }
 
+  function handleKeydown(event: KeyboardEvent) {
+    const pomodoroCommand = pomodoroCommandFromKeydown(event);
+
+    if (!pomodoroCommand) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (pomodoroCommand === "toggle") {
+      toggleTimer();
+      return;
+    }
+
+    resetTimer();
+  }
+
   function toggleTimer() {
     pomodoroState = togglePomodoro(pomodoroState);
     syncTimerInterval();
@@ -149,6 +167,8 @@
   }
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <main class="app-shell" aria-label="koko workspace">
   <div class="workspace">
     <section class="note-panel" aria-label="DailyNote editor">
@@ -184,7 +204,7 @@
               class="icon-button"
               type="button"
               aria-label={timerActionLabel}
-              title={timerActionLabel}
+              title={`${timerActionLabel} (Cmd+Shift+P)`}
               onclick={toggleTimer}
             >
               {#if pomodoroState.running}
@@ -197,7 +217,7 @@
               class="icon-button"
               type="button"
               aria-label="Reset"
-              title="Reset"
+              title="Reset (Cmd+Shift+R)"
               onclick={resetTimer}
             >
               <RotateCcw size={16} strokeWidth={2.2} aria-hidden="true" />
