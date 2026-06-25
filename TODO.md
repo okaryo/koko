@@ -48,7 +48,7 @@ Open product questions:
 - [ ] Create Tauri + Svelte project
 - [ ] Setup TypeScript
 - [ ] Setup SvelteKit static adapter
-- [ ] Add Tiptap dependencies
+- [x] Add Tiptap dependencies
 - [ ] Setup linting and formatting
 - [ ] Setup Vitest
 - [ ] Setup Rust crate structure
@@ -67,7 +67,7 @@ Setup decisions:
 ## Phase 2 - DailyNote Workspace
 
 - [ ] Create DailyNote model
-- [ ] Create main Tiptap editor UI
+- [x] Create main Tiptap editor UI
 - [ ] Persist the active DailyNote locally
 - [ ] Load the active DailyNote on launch
 - [ ] Add explicit "Start today's note" action

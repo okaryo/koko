@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onDestroy, onMount } from "svelte";
+  import type { Editor } from "@tiptap/core";
+
   type Pin = {
     id: number;
     body: string;
@@ -10,9 +13,64 @@
     day: "numeric",
   }).format(new Date());
 
-  let dailyNoteBody = $state("");
+  let editorElement = $state<HTMLDivElement>();
+  let dailyNoteHtml = $state("");
+  let editor: Editor | null = null;
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
+
+  onMount(async () => {
+    if (!editorElement || editor) {
+      return;
+    }
+
+    const [
+      { Editor },
+      { default: StarterKit },
+      { default: Placeholder },
+      { default: TaskList },
+      { default: TaskItem },
+    ] = await Promise.all([
+      import("@tiptap/core"),
+      import("@tiptap/starter-kit"),
+      import("@tiptap/extension-placeholder"),
+      import("@tiptap/extension-task-list"),
+      import("@tiptap/extension-task-item"),
+    ]);
+
+    if (!editorElement) {
+      return;
+    }
+
+    editor = new Editor({
+      element: editorElement,
+      extensions: [
+        StarterKit,
+        TaskList,
+        TaskItem.configure({
+          nested: true,
+        }),
+        Placeholder.configure({
+          placeholder:
+            "Write tasks, logs, decisions, links, and return points...",
+        }),
+      ],
+      editorProps: {
+        attributes: {
+          "aria-label": "DailyNote body",
+          class: "daily-note-editor",
+        },
+      },
+      onUpdate: ({ editor: updatedEditor }) => {
+        dailyNoteHtml = updatedEditor.getHTML();
+      },
+    });
+  });
+
+  onDestroy(() => {
+    editor?.destroy();
+    editor = null;
+  });
 
   function createPin() {
     const body = newPinBody.trim();
@@ -38,12 +96,11 @@
         <button type="button">Start today's note</button>
       </header>
 
-      <textarea
+      <div
         class="daily-note"
-        bind:value={dailyNoteBody}
-        placeholder={`# ${today}\n\n- [ ] Write the next thing to do\n- Log what changed, why, and what to return to`}
-        aria-label="DailyNote body"
-      ></textarea>
+        bind:this={editorElement}
+        data-empty={dailyNoteHtml.length === 0}
+      ></div>
     </section>
 
     <aside class="side-panel" aria-label="Sidebar">
@@ -222,7 +279,8 @@
   }
 
   button:focus-visible,
-  textarea:focus-visible {
+  textarea:focus-visible,
+  :global(.daily-note-editor:focus-visible) {
     outline: 2px solid #6f8f4e;
     outline-offset: 2px;
   }
@@ -240,10 +298,65 @@
   .daily-note {
     flex: 1;
     min-height: 0;
+    overflow: auto;
+    border: 1px solid rgba(43, 41, 36, 0.12);
+    border-radius: 6px;
+    background: #fffdf8;
+  }
+
+  :global(.daily-note-editor) {
+    min-height: 100%;
     padding: 20px;
+    outline: none;
+    color: #20211f;
     font-family:
       "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
     font-size: 0.95rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  :global(.daily-note-editor p) {
+    margin: 0 0 0.7rem;
+  }
+
+  :global(.daily-note-editor ul),
+  :global(.daily-note-editor ol) {
+    margin: 0 0 0.7rem;
+    padding-left: 1.4rem;
+  }
+
+  :global(.daily-note-editor li) {
+    margin: 0.18rem 0;
+  }
+
+  :global(.daily-note-editor ul[data-type="taskList"]) {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  :global(.daily-note-editor li[data-type="taskItem"]) {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  :global(.daily-note-editor li[data-type="taskItem"] > label) {
+    display: flex;
+    align-items: flex-start;
+    padding-top: 0.1rem;
+  }
+
+  :global(.daily-note-editor li[data-type="taskItem"] > div) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  :global(.daily-note-editor .is-editor-empty:first-child::before) {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: #8b8375;
+    pointer-events: none;
   }
 
   .pin-form {
