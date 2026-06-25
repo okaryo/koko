@@ -9,6 +9,12 @@
     updateDailyNoteBody,
     type DailyNote,
   } from "$lib/api/dailyNotes";
+  import {
+    archivePin as archivePersistedPin,
+    createPin as createPersistedPin,
+    listPins,
+    type Pin,
+  } from "$lib/api/pins";
   import { pomodoroCommandFromKeydown } from "$lib/keyboard";
   import {
     formatTime,
@@ -20,11 +26,6 @@
     togglePomodoro,
     type PomodoroState,
   } from "$lib/pomodoro/timer";
-
-  type Pin = {
-    id: number;
-    body: string;
-  };
 
   const today = new Intl.DateTimeFormat("en", {
     weekday: "short",
@@ -55,6 +56,7 @@
 
     activeDailyNote = await loadActiveDailyNote();
     dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
+    pins = await loadPins();
 
     const [
       { Editor },
@@ -110,19 +112,63 @@
     editor = null;
   });
 
-  function createPin() {
+  async function createPin() {
     const body = newPinBody.trim();
 
     if (!body) {
       return;
     }
 
-    pins = [{ id: Date.now(), body }, ...pins];
-    newPinBody = "";
+    if (!isTauriRuntime()) {
+      pins = [
+        {
+          id: Date.now(),
+          body,
+          createdAtMs: Date.now(),
+          updatedAtMs: Date.now(),
+          archivedAtMs: null,
+        },
+        ...pins,
+      ];
+      newPinBody = "";
+      return;
+    }
+
+    try {
+      const pin = await createPersistedPin(body, Date.now());
+
+      pins = [pin, ...pins];
+      newPinBody = "";
+    } catch (error) {
+      console.warn("Pin create failed", error);
+    }
   }
 
-  function archivePin(id: number) {
-    pins = pins.filter((pin) => pin.id !== id);
+  async function archivePin(id: number) {
+    if (!isTauriRuntime()) {
+      pins = pins.filter((pin) => pin.id !== id);
+      return;
+    }
+
+    try {
+      await archivePersistedPin(id, Date.now());
+      pins = pins.filter((pin) => pin.id !== id);
+    } catch (error) {
+      console.warn("Pin archive failed", error);
+    }
+  }
+
+  async function loadPins() {
+    if (!isTauriRuntime()) {
+      return [];
+    }
+
+    try {
+      return await listPins();
+    } catch (error) {
+      console.warn("Pins load failed", error);
+      return [];
+    }
   }
 
   function handleKeydown(event: KeyboardEvent) {

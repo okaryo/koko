@@ -90,11 +90,11 @@ Daily workspace decisions:
 ## Phase 3 - Pins
 
 - [ ] Create Pin model
-- [ ] Persist Pins in SQLite
+- [x] Persist Pins in SQLite
 - [ ] Create visible Pins UI
-- [ ] Create Pin
+- [x] Create Pin
 - [ ] Edit Pin
-- [ ] Archive Pin
+- [x] Archive Pin
 - [ ] Add keyboard-first Pin navigation
 - [ ] Add keyboard shortcut for creating a Pin
 - [ ] Add keyboard shortcut for archiving a Pin
@@ -158,7 +158,7 @@ Keyboard decisions:
 
 - [x] Choose local persistence approach: SQLite
 - [x] Implement DailyNote repository
-- [ ] Implement Pin repository
+- [x] Implement Pin repository
 - [ ] Implement settings repository
 - [x] Add SQLite migrations
 - [ ] Add backup/export-friendly data shape
@@ -183,7 +183,7 @@ Decision criteria:
 
 - [ ] Add tests for Markdown editing helpers
 - [ ] Add tests for DailyNote lifecycle logic
-- [ ] Add tests for Pin behavior
+- [x] Add tests for Pin behavior
 - [ ] Add tests for Pomodoro state transitions
 - [x] Add Rust tests for persistence logic
 - [ ] Add a small manual keyboard workflow checklist

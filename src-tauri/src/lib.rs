@@ -1,5 +1,6 @@
 mod daily_note;
 mod db;
+mod pin;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -13,6 +14,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             daily_note::commands::get_or_create_daily_note,
             daily_note::commands::update_daily_note_body,
+            pin::commands::list_pins,
+            pin::commands::create_pin,
+            pin::commands::archive_pin,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,6 +1,9 @@
 use rusqlite::Connection;
 
-const MIGRATIONS: &[(u32, &str)] = &[(1, include_str!("../../migrations/001_initial.sql"))];
+const MIGRATIONS: &[(u32, &str)] = &[
+    (1, include_str!("../../migrations/001_initial.sql")),
+    (2, include_str!("../../migrations/002_create_pins.sql")),
+];
 
 pub fn apply(connection: &mut Connection) -> Result<(), String> {
     let current_version = current_schema_version(connection)?;
@@ -56,21 +59,24 @@ mod tests {
         let version: u32 = connection
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .expect("read schema version");
-        let daily_notes_table_count: u32 = connection
+        let (daily_notes_table_count, pins_table_count): (u32, u32) = connection
             .query_row(
                 "
-                SELECT COUNT(*)
+                SELECT
+                    SUM(name = 'daily_notes'),
+                    SUM(name = 'pins')
                 FROM sqlite_schema
                 WHERE type = 'table'
-                  AND name = 'daily_notes'
+                  AND name IN ('daily_notes', 'pins')
                 ",
                 [],
-                |row| row.get(0),
+                |row| Ok((row.get(0)?, row.get(1)?)),
             )
-            .expect("read daily notes table count");
+            .expect("read table counts");
 
-        assert_eq!(version, 1);
+        assert_eq!(version, 2);
         assert_eq!(daily_notes_table_count, 1);
+        assert_eq!(pins_table_count, 1);
     }
 
     #[test]
@@ -97,7 +103,7 @@ mod tests {
             .query_row("SELECT COUNT(*) FROM daily_notes", [], |row| row.get(0))
             .expect("read daily note count");
 
-        assert_eq!(version, 1);
+        assert_eq!(version, 2);
         assert_eq!(daily_note_count, 1);
     }
 }
