@@ -31,59 +31,11 @@
 </script>
 
 <main class="app-shell" aria-label="koko workspace">
-  <header class="top-bar">
-    <div>
-      <p class="eyebrow">koko</p>
-      <h1>DailyNote</h1>
-    </div>
-    <div class="top-actions" aria-label="DailyNote actions">
-      <span class="date-label">{today}</span>
-      <button type="button">Start today's note</button>
-    </div>
-  </header>
-
   <div class="workspace">
-    <aside class="pins-panel" aria-label="Pins">
-      <header class="panel-header">
-        <div>
-          <p class="eyebrow">Visible notes</p>
-          <h2>Pins</h2>
-        </div>
-      </header>
-
-      <form class="pin-form" onsubmit={(event) => { event.preventDefault(); createPin(); }}>
-        <textarea
-          bind:value={newPinBody}
-          rows="3"
-          placeholder="Pin a monthly goal, reminder, or idea..."
-          aria-label="New pin"
-        ></textarea>
-        <button type="submit">Pin</button>
-      </form>
-
-      <div class="pin-list" aria-label="Active pins">
-        {#if pins.length === 0}
-          <p class="empty-state">No pins yet.</p>
-        {:else}
-          {#each pins as pin (pin.id)}
-            <article class="pin">
-              <p>{pin.body}</p>
-              <button type="button" onclick={() => archivePin(pin.id)}>
-                Archive
-              </button>
-            </article>
-          {/each}
-        {/if}
-      </div>
-    </aside>
-
     <section class="note-panel" aria-label="DailyNote editor">
-      <header class="panel-header">
-        <div>
-          <p class="eyebrow">Today</p>
-          <h2>Write without switching modes</h2>
-        </div>
-        <span class="save-state">Local draft</span>
+      <header class="panel-header note-header">
+        <h1>{today}</h1>
+        <button type="button">Start today's note</button>
       </header>
 
       <textarea
@@ -94,23 +46,59 @@
       ></textarea>
     </section>
 
-    <aside class="timer-panel" aria-label="Pomodoro">
-      <header class="panel-header">
-        <div>
-          <p class="eyebrow">Rhythm</p>
+    <aside class="side-panel" aria-label="Sidebar">
+      <section class="timer-panel" aria-label="Pomodoro">
+        <header class="panel-header">
           <h2>Pomodoro</h2>
+        </header>
+
+        <div class="timer-face" aria-label="25 minutes remaining">
+          <span>25:00</span>
+          <small>Ready</small>
         </div>
-      </header>
 
-      <div class="timer-face" aria-label="25 minutes remaining">
-        <span>25:00</span>
-        <small>Ready</small>
-      </div>
+        <div class="timer-actions" aria-label="Pomodoro controls">
+          <button type="button">Start</button>
+          <button type="button">Reset</button>
+        </div>
+      </section>
 
-      <div class="timer-actions" aria-label="Pomodoro controls">
-        <button type="button">Start</button>
-        <button type="button">Reset</button>
-      </div>
+      <section class="pins-panel" aria-label="Pins">
+        <header class="panel-header">
+          <h2>Pins</h2>
+        </header>
+
+        <form
+          class="pin-form"
+          onsubmit={(event) => {
+            event.preventDefault();
+            createPin();
+          }}
+        >
+          <textarea
+            bind:value={newPinBody}
+            rows="3"
+            placeholder="Pin a monthly goal, reminder, or idea..."
+            aria-label="New pin"
+          ></textarea>
+          <button type="submit">Pin</button>
+        </form>
+
+        <div class="pin-list" aria-label="Active pins">
+          {#if pins.length === 0}
+            <p class="empty-state">No pins yet.</p>
+          {:else}
+            {#each pins as pin (pin.id)}
+              <article class="pin">
+                <p>{pin.body}</p>
+                <button type="button" onclick={() => archivePin(pin.id)}>
+                  Archive
+                </button>
+              </article>
+            {/each}
+          {/if}
+        </div>
+      </section>
     </aside>
   </div>
 </main>
@@ -137,54 +125,51 @@
   }
 
   .app-shell {
-    display: flex;
     min-height: 100vh;
-    flex-direction: column;
-    gap: 18px;
-    padding: 24px;
   }
 
-  .top-bar,
   .workspace,
+  .side-panel,
   .pins-panel,
   .note-panel,
   .timer-panel,
   .pin,
   .pin-form {
     border: 1px solid rgba(43, 41, 36, 0.12);
+    border-radius: 8px;
     background: rgba(255, 252, 246, 0.82);
-  }
-
-  .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    min-height: 76px;
-    padding: 16px 18px;
   }
 
   .workspace {
     display: grid;
-    grid-template-columns: minmax(220px, 260px) minmax(420px, 1fr) 220px;
-    gap: 14px;
-    flex: 1;
-    min-height: 0;
-    padding: 14px;
+    grid-template-columns: minmax(0, 1fr) 18.5rem;
+    gap: 0.8rem;
+    min-height: 100vh;
+    padding: 0.8rem;
+    border: 0;
+    background: transparent;
   }
 
+  .side-panel,
   .pins-panel,
   .note-panel,
   .timer-panel {
     display: flex;
     min-height: 0;
     flex-direction: column;
-    padding: 16px;
+    padding: 0.9rem;
   }
 
   .note-panel {
-    gap: 14px;
+    gap: 0.85rem;
     background: #fffdf8;
+  }
+
+  .side-panel {
+    gap: 0.8rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
   .pins-panel,
@@ -192,20 +177,19 @@
     gap: 12px;
   }
 
+  .pins-panel {
+    flex: 1;
+  }
+
   .panel-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
   }
 
-  .eyebrow {
-    margin: 0 0 4px;
-    color: #6d675d;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: uppercase;
+  .note-header {
+    min-height: 2.2rem;
   }
 
   h1,
@@ -221,18 +205,6 @@
 
   h2 {
     font-size: 1rem;
-  }
-
-  .top-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .date-label,
-  .save-state {
-    color: #6d675d;
-    font-size: 0.85rem;
   }
 
   button {
@@ -328,17 +300,18 @@
 
   .timer-face {
     display: grid;
-    min-height: 140px;
+    min-height: 104px;
     place-items: center;
     align-content: center;
     gap: 6px;
     border: 1px solid rgba(43, 41, 36, 0.12);
+    border-radius: 8px;
     background: #fffdf8;
   }
 
   .timer-face span {
     font-variant-numeric: tabular-nums;
-    font-size: 2.4rem;
+    font-size: 2rem;
     font-weight: 740;
     line-height: 1;
   }
