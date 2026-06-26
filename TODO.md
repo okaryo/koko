@@ -72,10 +72,10 @@ Setup decisions:
 - [x] Load the active DailyNote on launch
 - [x] Add explicit "Start today's note" action
 - [ ] Add unsaved/error state handling if needed
-- [ ] Add keyboard-first editor focus behavior
+- [x] Add keyboard-first editor focus behavior
 - [ ] Add list continuation behavior
 - [ ] Add checkbox continuation behavior
-- [ ] Add timestamp insertion command
+- [x] Add timestamp insertion command
 
 Daily workspace decisions:
 
@@ -86,6 +86,8 @@ Daily workspace decisions:
 - Avoid hidden metadata inside the document unless it is necessary and discussed.
 - `Start today's note` appears only when the current local date is later than the active DailyNote date.
 - Starting today's note saves the current DailyNote first, then loads or creates today's DailyNote.
+- `Cmd+Shift+N`: focus the DailyNote editor.
+- `Ctrl+T`: insert `HH:mm` at the current DailyNote cursor position.
 
 ---
 
@@ -142,7 +144,7 @@ Pomodoro decisions:
 ## Phase 5 - Keyboard Workflow
 
 - [x] Define app-wide shortcuts
-- [ ] Define editor shortcuts
+- [x] Define editor shortcuts
 - [x] Define Pomodoro shortcuts
 - [x] Define Pin shortcuts
 - [ ] Add keyboard shortcut help

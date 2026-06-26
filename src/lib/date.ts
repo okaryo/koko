@@ -16,3 +16,10 @@ export function formatDateLabel(dateString: string) {
     day: "numeric",
   }).format(date);
 }
+
+export function formatLocalTime(date: Date) {
+  const hours = `${date.getHours()}`.padStart(2, "0");
+  const minutes = `${date.getMinutes()}`.padStart(2, "0");
+
+  return `${hours}:${minutes}`;
+}

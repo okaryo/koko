@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import type { Editor } from "@tiptap/core";
+  import { formatLocalTime } from "$lib/date";
+  import { dailyNoteCommandFromKeydown } from "$lib/keyboard";
 
   type Props = {
     bodyHtml: string;
@@ -89,7 +91,36 @@
     editor?.destroy();
     editor = null;
   });
+
+  function handleKeydown(event: KeyboardEvent) {
+    const dailyNoteCommand = dailyNoteCommandFromKeydown(event);
+
+    if (!dailyNoteCommand) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (dailyNoteCommand === "focus") {
+      focusEditor();
+      return;
+    }
+
+    insertTimestamp();
+  }
+
+  function focusEditor() {
+    editor?.commands.focus();
+  }
+
+  function insertTimestamp() {
+    const timestamp = formatLocalTime(new Date());
+
+    editor?.chain().focus().insertContent(timestamp).run();
+  }
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <section class="note-panel" aria-label="DailyNote editor">
   <header class="panel-header note-header">

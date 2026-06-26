@@ -1,4 +1,5 @@
 export type PomodoroCommand = "toggle" | "reset";
+export type DailyNoteCommand = "focus" | "insertTimestamp";
 export type PinCommand =
   | "focusCreate"
   | "moveDown"
@@ -21,6 +22,32 @@ export function pomodoroCommandFromKeydown(
 
   if (key === "r") {
     return "reset";
+  }
+
+  return null;
+}
+
+export function dailyNoteCommandFromKeydown(
+  event: KeyboardEvent,
+): DailyNoteCommand | null {
+  if (
+    event.metaKey &&
+    event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    event.key.toLowerCase() === "n"
+  ) {
+    return "focus";
+  }
+
+  if (
+    event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey &&
+    !event.altKey &&
+    event.key.toLowerCase() === "t"
+  ) {
+    return "insertTimestamp";
   }
 
   return null;
