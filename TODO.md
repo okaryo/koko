@@ -71,7 +71,7 @@ Setup decisions:
 - [x] Persist the active DailyNote locally
 - [x] Load the active DailyNote on launch
 - [x] Add explicit "Start today's note" action
-- [ ] Add unsaved/error state handling if needed
+- [x] Add unsaved/error state handling if needed
 - [x] Add keyboard-first editor focus behavior
 - [x] Add list continuation behavior
 - [x] Add checkbox continuation behavior
@@ -90,6 +90,7 @@ Daily workspace decisions:
 - `Ctrl+T`: insert `HH:mm` at the current DailyNote cursor position.
 - Tiptap handles normal list continuation for `- ` and `1. ` input.
 - `- [ ] ` and `- [x] ` create checkbox items in the DailyNote editor.
+- The DailyNote header shows an animated saving icon, a temporary saved icon, or `Save failed` for local persistence state.
 
 ---
 

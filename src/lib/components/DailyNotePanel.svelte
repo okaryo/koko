@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
+  import Check from "@lucide/svelte/icons/check";
+  import CircleAlert from "@lucide/svelte/icons/circle-alert";
+  import LoaderCircle from "@lucide/svelte/icons/loader-circle";
   import type { Editor } from "@tiptap/core";
   import { formatLocalTime } from "$lib/date";
   import { dailyNoteCommandFromKeydown } from "$lib/keyboard";
@@ -8,6 +11,7 @@
     bodyHtml: string;
     canStartTodayNote: boolean;
     dateLabel: string;
+    saveStatus: "idle" | "saving" | "saved" | "error";
     onBodyChange: (bodyHtml: string) => void;
     onStartTodayNote: () => void | Promise<void>;
   };
@@ -16,6 +20,7 @@
     bodyHtml,
     canStartTodayNote,
     dateLabel,
+    saveStatus,
     onBodyChange,
     onStartTodayNote,
   }: Props = $props();
@@ -121,6 +126,7 @@
 
     editor?.chain().focus().insertContent(timestamp).run();
   }
+
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -128,11 +134,31 @@
 <section class="note-panel" aria-label="DailyNote editor">
   <header class="panel-header note-header">
     <h1>{dateLabel}</h1>
-    {#if canStartTodayNote}
-      <button type="button" onclick={() => void onStartTodayNote()}>
-        Start today's note
-      </button>
-    {/if}
+    <div class="note-header-actions">
+      {#if saveStatus === "saving"}
+        <span
+          class="save-status icon-only saving-status"
+          title="Saving"
+          aria-label="Saving"
+        >
+          <LoaderCircle size={16} strokeWidth={2.2} aria-hidden="true" />
+        </span>
+      {:else if saveStatus === "saved"}
+        <span class="save-status icon-only" title="Saved" aria-label="Saved">
+          <Check size={16} strokeWidth={2.2} aria-hidden="true" />
+        </span>
+      {:else if saveStatus === "error"}
+        <span class="save-status error-status">
+          <CircleAlert size={16} strokeWidth={2.2} aria-hidden="true" />
+          Save failed
+        </span>
+      {/if}
+      {#if canStartTodayNote}
+        <button type="button" onclick={() => void onStartTodayNote()}>
+          Start today's note
+        </button>
+      {/if}
+    </div>
   </header>
 
   <div class="daily-note" bind:this={editorElement}></div>
@@ -166,6 +192,55 @@
     font-size: 1.35rem;
     font-weight: 720;
     line-height: 1.1;
+  }
+
+  .note-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .save-status {
+    display: inline-flex;
+    width: auto;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #766d5f;
+    font-size: 0.78rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .save-status.icon-only {
+    width: 24px;
+  }
+
+  .save-status.icon-only :global(svg) {
+    display: block;
+  }
+
+  .saving-status :global(svg) {
+    animation: spin 0.9s linear infinite;
+  }
+
+  .note-header-actions .save-status:first-child:last-child {
+    margin-right: -2px;
+  }
+
+  .note-header-actions .error-status {
+    color: #9d3f32;
+  }
+
+  .save-status :global(svg) {
+    flex: 0 0 auto;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .daily-note {

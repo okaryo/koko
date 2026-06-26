@@ -10,18 +10,23 @@
   import PomodoroPanel from "$lib/components/PomodoroPanel.svelte";
   import { formatDateLabel, formatLocalDate } from "$lib/date";
 
+  type DailyNoteSaveStatus = "idle" | "saving" | "saved" | "error";
+
   let dailyNoteHtml = $state("");
   let activeDailyNote = $state<DailyNote | null>(null);
   let activeNoteDate = $state(formatLocalDate(new Date()));
   let currentDate = $state(formatLocalDate(new Date()));
+  let dailyNoteSaveStatus = $state<DailyNoteSaveStatus>("idle");
   let dateCheckInterval: ReturnType<typeof setInterval> | null = null;
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+  let dailyNoteSavedStatusTimeout: ReturnType<typeof setTimeout> | null = null;
   const activeNoteDateLabel = $derived(formatDateLabel(activeNoteDate));
   const canStartTodayNote = $derived(currentDate > activeNoteDate);
 
   onMount(async () => {
     activeDailyNote = await loadDailyNote(activeNoteDate);
     dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
+    dailyNoteSaveStatus = activeDailyNote ? "idle" : "error";
     dateCheckInterval = setInterval(() => {
       currentDate = formatLocalDate(new Date());
     }, 60_000);
@@ -30,6 +35,7 @@
   onDestroy(() => {
     stopDateCheck();
     clearDailyNoteSaveTimeout();
+    clearDailyNoteSavedStatusTimeout();
   });
 
   function handleDailyNoteBodyChange(bodyHtml: string) {
@@ -50,6 +56,7 @@
     currentDate = todayDate;
     activeDailyNote = await loadDailyNote(activeNoteDate);
     dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
+    dailyNoteSaveStatus = activeDailyNote ? "idle" : "error";
   }
 
   async function loadDailyNote(noteDate: string) {
@@ -66,6 +73,7 @@
       return;
     }
 
+    showDailyNoteSaveStatus("saving");
     clearDailyNoteSaveTimeout();
 
     dailyNoteSaveTimeout = setTimeout(() => {
@@ -84,7 +92,9 @@
         bodyHtml,
         Date.now(),
       );
+      showDailyNoteSaveStatus("saved");
     } catch (error) {
+      showDailyNoteSaveStatus("error");
       console.warn("DailyNote save failed", error);
     }
   }
@@ -98,6 +108,29 @@
     dailyNoteSaveTimeout = null;
   }
 
+  function showDailyNoteSaveStatus(status: DailyNoteSaveStatus) {
+    clearDailyNoteSavedStatusTimeout();
+    dailyNoteSaveStatus = status;
+
+    if (status !== "saved") {
+      return;
+    }
+
+    dailyNoteSavedStatusTimeout = setTimeout(() => {
+      dailyNoteSaveStatus = "idle";
+      dailyNoteSavedStatusTimeout = null;
+    }, 3_000);
+  }
+
+  function clearDailyNoteSavedStatusTimeout() {
+    if (!dailyNoteSavedStatusTimeout) {
+      return;
+    }
+
+    clearTimeout(dailyNoteSavedStatusTimeout);
+    dailyNoteSavedStatusTimeout = null;
+  }
+
   async function saveCurrentDailyNoteImmediately() {
     clearDailyNoteSaveTimeout();
 
@@ -105,6 +138,7 @@
       return;
     }
 
+    showDailyNoteSaveStatus("saving");
     await saveDailyNoteBody(dailyNoteHtml);
   }
 
@@ -124,6 +158,7 @@
       bodyHtml={dailyNoteHtml}
       canStartTodayNote={canStartTodayNote}
       dateLabel={activeNoteDateLabel}
+      saveStatus={dailyNoteSaveStatus}
       onBodyChange={handleDailyNoteBodyChange}
       onStartTodayNote={startTodayNote}
     />
