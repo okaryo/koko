@@ -8,7 +8,6 @@
     updatePinBody,
   } from "$lib/api/pins";
   import { pinCommandFromKeydown } from "$lib/keyboard";
-  import { isTauriRuntime } from "$lib/runtime";
 
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
@@ -31,21 +30,6 @@
       return;
     }
 
-    if (!isTauriRuntime()) {
-      pins = [
-        {
-          id: Date.now(),
-          body,
-          createdAtMs: Date.now(),
-          updatedAtMs: Date.now(),
-          archivedAtMs: null,
-        },
-        ...pins,
-      ];
-      newPinBody = "";
-      return;
-    }
-
     try {
       const pin = await createPersistedPin(body, Date.now());
 
@@ -58,12 +42,6 @@
   }
 
   async function archivePin(id: number) {
-    if (!isTauriRuntime()) {
-      pins = pins.filter((pin) => pin.id !== id);
-      ensureSelectedPin();
-      return;
-    }
-
     try {
       await archivePersistedPin(id, Date.now());
       pins = pins.filter((pin) => pin.id !== id);
@@ -95,16 +73,6 @@
       return;
     }
 
-    if (!isTauriRuntime()) {
-      pins = pins.map((pin) =>
-        pin.id === editingPinId
-          ? { ...pin, body, updatedAtMs: Date.now() }
-          : pin,
-      );
-      cancelEditingPin();
-      return;
-    }
-
     try {
       const updatedPin = await updatePinBody(editingPinId, body, Date.now());
 
@@ -116,10 +84,6 @@
   }
 
   async function loadPins() {
-    if (!isTauriRuntime()) {
-      return [];
-    }
-
     try {
       return await listPins();
     } catch (error) {

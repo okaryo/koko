@@ -9,7 +9,6 @@
   import PinsPanel from "$lib/components/PinsPanel.svelte";
   import PomodoroPanel from "$lib/components/PomodoroPanel.svelte";
   import { formatDateLabel, formatLocalDate } from "$lib/date";
-  import { isTauriRuntime } from "$lib/runtime";
 
   let dailyNoteHtml = $state("");
   let activeDailyNote = $state<DailyNote | null>(null);
@@ -54,10 +53,6 @@
   }
 
   async function loadDailyNote(noteDate: string) {
-    if (!isTauriRuntime()) {
-      return null;
-    }
-
     try {
       return await getOrCreateDailyNote(noteDate, Date.now());
     } catch (error) {
@@ -67,7 +62,7 @@
   }
 
   function scheduleDailyNoteSave(bodyHtml: string) {
-    if (!activeDailyNote || !isTauriRuntime()) {
+    if (!activeDailyNote) {
       return;
     }
 
@@ -106,7 +101,7 @@
   async function saveCurrentDailyNoteImmediately() {
     clearDailyNoteSaveTimeout();
 
-    if (!activeDailyNote || !isTauriRuntime()) {
+    if (!activeDailyNote) {
       return;
     }
 
