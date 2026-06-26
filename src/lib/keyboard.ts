@@ -1,5 +1,6 @@
 export type PomodoroCommand = "toggle" | "reset";
 export type DailyNoteCommand = "focus" | "insertTimestamp";
+export type AppCommand = "toggleKeyboardHelp";
 export type PinCommand =
   | "focusCreate"
   | "moveDown"
@@ -78,4 +79,18 @@ export function pinCommandFromKeydown(event: KeyboardEvent): PinCommand | null {
     default:
       return null;
   }
+}
+
+export function appCommandFromKeydown(event: KeyboardEvent): AppCommand | null {
+  if (
+    event.metaKey &&
+    !event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    event.key === "/"
+  ) {
+    return "toggleKeyboardHelp";
+  }
+
+  return null;
 }

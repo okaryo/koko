@@ -6,9 +6,11 @@
     type DailyNote,
   } from "$lib/api/dailyNotes";
   import DailyNotePanel from "$lib/components/DailyNotePanel.svelte";
+  import KeyboardShortcutsDialog from "$lib/components/KeyboardShortcutsDialog.svelte";
   import PinsPanel from "$lib/components/PinsPanel.svelte";
   import PomodoroPanel from "$lib/components/PomodoroPanel.svelte";
   import { formatDateLabel, formatLocalDate } from "$lib/date";
+  import { appCommandFromKeydown } from "$lib/keyboard";
 
   type DailyNoteSaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -17,6 +19,7 @@
   let activeNoteDate = $state(formatLocalDate(new Date()));
   let currentDate = $state(formatLocalDate(new Date()));
   let dailyNoteSaveStatus = $state<DailyNoteSaveStatus>("idle");
+  let keyboardShortcutsOpen = $state(false);
   let dateCheckInterval: ReturnType<typeof setInterval> | null = null;
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let dailyNoteSavedStatusTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -150,7 +153,20 @@
     clearInterval(dateCheckInterval);
     dateCheckInterval = null;
   }
+
+  function handleKeydown(event: KeyboardEvent) {
+    const appCommand = appCommandFromKeydown(event);
+
+    if (!appCommand) {
+      return;
+    }
+
+    event.preventDefault();
+    keyboardShortcutsOpen = !keyboardShortcutsOpen;
+  }
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <main class="app-shell" aria-label="koko workspace">
   <div class="workspace">
@@ -169,6 +185,13 @@
     </aside>
   </div>
 </main>
+
+<KeyboardShortcutsDialog
+  open={keyboardShortcutsOpen}
+  onClose={() => {
+    keyboardShortcutsOpen = false;
+  }}
+/>
 
 <style>
   :global(*) {

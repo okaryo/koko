@@ -150,7 +150,7 @@ Pomodoro decisions:
 - [x] Define editor shortcuts
 - [x] Define Pomodoro shortcuts
 - [x] Define Pin shortcuts
-- [ ] Add keyboard shortcut help
+- [x] Add keyboard shortcut help
 - [ ] Ensure focus behavior is predictable
 - [ ] Preserve native text editing behavior where possible
 
@@ -162,6 +162,7 @@ Keyboard decisions:
 - All major DailyNote, Pin, and Pomodoro operations must be keyboard-accessible.
 - `Cmd+Shift+P`: start, pause, or continue Pomodoro.
 - `Cmd+Shift+R`: reset Pomodoro.
+- `Cmd+/`: open or close keyboard shortcut help.
 
 ---
 
