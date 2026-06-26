@@ -30,7 +30,7 @@ Direction decisions:
 - Pins should be creatable and archivable in `v0.1.0`.
 - The DailyNote editor should use Tiptap.
 - Pomodoro exists to support rhythm, not to drive analytics or scoring.
-- Pomodoro behavior, sound volume settings, sound source settings, and keyboard shortcuts should follow Current where practical.
+- Pomodoro behavior, sound volume settings, and keyboard shortcuts should follow Current where practical.
 - Current is the implementation reference, but its separate Todo and Log sections should not be carried over.
 
 Open product questions:
@@ -132,8 +132,7 @@ Pin decisions:
 - [x] Add completion notification
 - [x] Add focus and completion sounds
 - [x] Add Pomodoro sound volume settings
-- [ ] Add Pomodoro sound source settings
-- [ ] Persist timer settings
+- [x] Persist Pomodoro sound volume settings
 
 Pomodoro decisions:
 
@@ -144,6 +143,7 @@ Pomodoro decisions:
 - Pomodoro completion sends a notification when notification permission has been granted.
 - Pomodoro plays a quiet focus tick/tock loop while running and a completion sound when the timer completes.
 - Pomodoro focus and completion sound volume can be adjusted from the timer panel.
+- Pomodoro focus and completion sound volume settings are persisted locally in `settings.json`.
 
 ---
 
@@ -174,13 +174,14 @@ Keyboard decisions:
 - [x] Choose local persistence approach: SQLite
 - [x] Implement DailyNote repository
 - [x] Implement Pin repository
-- [ ] Implement settings repository
+- [x] Implement settings file storage
 - [x] Add SQLite migrations
 - [ ] Add backup/export-friendly data shape
 
 Persistence decisions:
 
-- Use SQLite for `v0.1.0`.
+- Use SQLite for DailyNote and Pin persistence in `v0.1.0`.
+- Use `settings.json` in the app config directory for lightweight app settings.
 - Follow Current's persistence patterns where practical.
 - Keep DailyNote content export-friendly even though storage is SQLite.
 

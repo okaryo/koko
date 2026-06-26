@@ -4,6 +4,10 @@
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
+  import {
+    getSettings,
+    updatePomodoroVolumeSettings,
+  } from "$lib/api/settings";
   import SlidersHorizontal from "@lucide/svelte/icons/sliders-horizontal";
   import { createKokoAudio, createKokoAudioSequence } from "$lib/audio/player";
   import {
@@ -37,6 +41,8 @@
   let focusVolumePercent = $state(DEFAULT_FOCUS_VOLUME_PERCENT);
   let completionVolumePercent = $state(DEFAULT_COMPLETION_VOLUME_PERCENT);
   let timerInterval: ReturnType<typeof setInterval> | null = null;
+  let volumeSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+  let settingsLoaded = false;
   const focusLoopAudio = createKokoAudioSequence({
     sources: pomodoroFocusLoopSounds.map((sound) => sound.src),
     volume: volumePercentToAudioVolume(DEFAULT_FOCUS_VOLUME_PERCENT),
@@ -55,22 +61,32 @@
 
   onMount(() => {
     void loadNotificationPermission();
+    void loadSettings();
   });
 
   onDestroy(() => {
     stopTimer();
+    clearVolumeSaveTimeout();
     focusLoopAudio.dispose();
     completionAudio.dispose();
   });
 
   $effect(() => {
     focusLoopAudio.setVolume(volumePercentToAudioVolume(focusVolumePercent));
+
+    if (settingsLoaded) {
+      scheduleVolumeSave();
+    }
   });
 
   $effect(() => {
     completionAudio.setVolume(
       volumePercentToAudioVolume(completionVolumePercent),
     );
+
+    if (settingsLoaded) {
+      scheduleVolumeSave();
+    }
   });
 
   function handleKeydown(event: KeyboardEvent) {
@@ -145,6 +161,50 @@
   async function requestNotifications() {
     notificationPermissionGranted = await requestNotificationPermission();
     notificationPermissionLoaded = true;
+  }
+
+  async function loadSettings() {
+    try {
+      const settings = await getSettings();
+
+      focusVolumePercent = settings.pomodoro.focusVolume;
+      completionVolumePercent = settings.pomodoro.completionVolume;
+    } catch (error) {
+      console.warn("Settings load failed", error);
+    } finally {
+      settingsLoaded = true;
+    }
+  }
+
+  function scheduleVolumeSave() {
+    clearVolumeSaveTimeout();
+
+    volumeSaveTimeout = setTimeout(() => {
+      void saveVolumeSettings();
+    }, 500);
+  }
+
+  async function saveVolumeSettings() {
+    try {
+      const settings = await updatePomodoroVolumeSettings(
+        focusVolumePercent,
+        completionVolumePercent,
+      );
+
+      focusVolumePercent = settings.pomodoro.focusVolume;
+      completionVolumePercent = settings.pomodoro.completionVolume;
+    } catch (error) {
+      console.warn("Settings save failed", error);
+    }
+  }
+
+  function clearVolumeSaveTimeout() {
+    if (!volumeSaveTimeout) {
+      return;
+    }
+
+    clearTimeout(volumeSaveTimeout);
+    volumeSaveTimeout = null;
   }
 
   function volumePercentToAudioVolume(volumePercent: number) {

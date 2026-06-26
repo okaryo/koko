@@ -1,6 +1,7 @@
 mod daily_note;
 mod db;
 mod pin;
+mod settings;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,6 +20,8 @@ pub fn run() {
             pin::commands::create_pin,
             pin::commands::update_pin_body,
             pin::commands::archive_pin,
+            settings::commands::get_settings,
+            settings::commands::update_pomodoro_volume_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
