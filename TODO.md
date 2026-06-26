@@ -129,7 +129,7 @@ Pin decisions:
 - [x] Reset timer
 - [x] Display remaining time
 - [x] Add keyboard shortcuts
-- [ ] Add completion notification
+- [x] Add completion notification
 - [ ] Add focus and completion sounds
 - [ ] Add Pomodoro sound volume settings
 - [ ] Add Pomodoro sound source settings
@@ -141,6 +141,7 @@ Pomodoro decisions:
 - Focus duration should default to 25 minutes.
 - Timer controls should be available without pulling focus away from the editor.
 - Session counts and analytics are not planned for the core app.
+- Pomodoro completion sends a notification when notification permission has been granted.
 
 ---
 

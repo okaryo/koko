@@ -1,9 +1,15 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
+  import Bell from "@lucide/svelte/icons/bell";
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
   import { pomodoroCommandFromKeydown } from "$lib/keyboard";
+  import {
+    isNotificationPermissionGranted,
+    requestNotificationPermission,
+    sendPomodoroCompleteNotification,
+  } from "$lib/notifications";
   import {
     formatTime,
     initialPomodoroState,
@@ -16,12 +22,18 @@
   } from "$lib/pomodoro/timer";
 
   let pomodoroState = $state<PomodoroState>(initialPomodoroState());
+  let notificationPermissionLoaded = $state(false);
+  let notificationPermissionGranted = $state(false);
   let timerInterval: ReturnType<typeof setInterval> | null = null;
   const formattedRemainingTime = $derived(
     formatTime(pomodoroState.remainingSeconds),
   );
   const timerStatus = $derived(pomodoroStatus(pomodoroState));
   const timerActionLabel = $derived(pomodoroPrimaryActionLabel(pomodoroState));
+
+  onMount(() => {
+    void loadNotificationPermission();
+  });
 
   onDestroy(() => {
     stopTimer();
@@ -71,6 +83,7 @@
 
       if (result.completed) {
         stopTimer();
+        void sendPomodoroCompleteNotification();
       }
     }, 1000);
   }
@@ -83,6 +96,16 @@
     clearInterval(timerInterval);
     timerInterval = null;
   }
+
+  async function loadNotificationPermission() {
+    notificationPermissionGranted = await isNotificationPermissionGranted();
+    notificationPermissionLoaded = true;
+  }
+
+  async function requestNotifications() {
+    notificationPermissionGranted = await requestNotificationPermission();
+    notificationPermissionLoaded = true;
+  }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -90,6 +113,17 @@
 <section class="timer-panel" aria-label="Pomodoro">
   <header class="panel-header">
     <h2>Pomodoro</h2>
+    {#if notificationPermissionLoaded && !notificationPermissionGranted}
+      <button
+        class="icon-button subtle-icon-button"
+        type="button"
+        aria-label="Enable notifications"
+        title="Enable notifications"
+        onclick={() => void requestNotifications()}
+      >
+        <Bell size={16} strokeWidth={2.2} aria-hidden="true" />
+      </button>
+    {/if}
   </header>
 
   <div class="timer-face" aria-label={`${formattedRemainingTime} remaining`}>
@@ -199,5 +233,16 @@
     align-items: center;
     justify-content: center;
     padding: 0;
+  }
+
+  .subtle-icon-button {
+    border-color: transparent;
+    background: transparent;
+    color: #4a4438;
+  }
+
+  .subtle-icon-button:hover {
+    background: rgba(74, 68, 56, 0.08);
+    color: #20211f;
   }
 </style>
