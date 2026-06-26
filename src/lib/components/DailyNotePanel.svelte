@@ -72,7 +72,11 @@
       editorProps: {
         attributes: {
           "aria-label": "DailyNote body",
+          autocapitalize: "off",
+          autocomplete: "off",
+          autocorrect: "off",
           class: "daily-note-editor",
+          spellcheck: "false",
         },
       },
       onUpdate: ({ editor: updatedEditor }) => {

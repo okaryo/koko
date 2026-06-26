@@ -8,6 +8,7 @@
     updatePinBody,
   } from "$lib/api/pins";
   import { pinCommandFromKeydown } from "$lib/keyboard";
+  import { disableAutocorrect } from "$lib/textAssist";
 
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
@@ -211,7 +212,11 @@
       bind:this={newPinTextareaElement}
       bind:value={newPinBody}
       rows="3"
+      use:disableAutocorrect
+      autocapitalize="off"
+      autocomplete="off"
       placeholder="Pin a monthly goal, reminder, or idea..."
+      spellcheck="false"
       aria-label="New pin"
     ></textarea>
     <button type="submit">Pin</button>
@@ -241,6 +246,10 @@
             <textarea
               bind:value={editingPinBody}
               rows="3"
+              use:disableAutocorrect
+              autocapitalize="off"
+              autocomplete="off"
+              spellcheck="false"
               aria-label="Edit pin"
             ></textarea>
             <div class="pin-actions">
