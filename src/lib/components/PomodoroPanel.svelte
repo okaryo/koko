@@ -4,6 +4,7 @@
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
+  import SlidersHorizontal from "@lucide/svelte/icons/sliders-horizontal";
   import { createKokoAudio, createKokoAudioSequence } from "$lib/audio/player";
   import {
     pomodoroCompletionSounds,
@@ -26,21 +27,24 @@
     type PomodoroState,
   } from "$lib/pomodoro/timer";
 
-  const POMODORO_FOCUS_VOLUME = 0.28;
-  const POMODORO_COMPLETION_VOLUME = 0.6;
+  const DEFAULT_FOCUS_VOLUME_PERCENT = 28;
+  const DEFAULT_COMPLETION_VOLUME_PERCENT = 60;
 
   let pomodoroState = $state<PomodoroState>(initialPomodoroState());
   let notificationPermissionLoaded = $state(false);
   let notificationPermissionGranted = $state(false);
+  let soundSettingsOpen = $state(false);
+  let focusVolumePercent = $state(DEFAULT_FOCUS_VOLUME_PERCENT);
+  let completionVolumePercent = $state(DEFAULT_COMPLETION_VOLUME_PERCENT);
   let timerInterval: ReturnType<typeof setInterval> | null = null;
   const focusLoopAudio = createKokoAudioSequence({
     sources: pomodoroFocusLoopSounds.map((sound) => sound.src),
-    volume: POMODORO_FOCUS_VOLUME,
+    volume: volumePercentToAudioVolume(DEFAULT_FOCUS_VOLUME_PERCENT),
     failureMessage: "Failed to play Pomodoro focus sound.",
   });
   const completionAudio = createKokoAudio({
     src: pomodoroCompletionSounds[0].src,
-    volume: POMODORO_COMPLETION_VOLUME,
+    volume: volumePercentToAudioVolume(DEFAULT_COMPLETION_VOLUME_PERCENT),
     failureMessage: "Failed to play Pomodoro completion sound.",
   });
   const formattedRemainingTime = $derived(
@@ -57,6 +61,16 @@
     stopTimer();
     focusLoopAudio.dispose();
     completionAudio.dispose();
+  });
+
+  $effect(() => {
+    focusLoopAudio.setVolume(volumePercentToAudioVolume(focusVolumePercent));
+  });
+
+  $effect(() => {
+    completionAudio.setVolume(
+      volumePercentToAudioVolume(completionVolumePercent),
+    );
   });
 
   function handleKeydown(event: KeyboardEvent) {
@@ -132,6 +146,10 @@
     notificationPermissionGranted = await requestNotificationPermission();
     notificationPermissionLoaded = true;
   }
+
+  function volumePercentToAudioVolume(volumePercent: number) {
+    return Math.min(100, Math.max(0, volumePercent)) / 100;
+  }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -139,17 +157,32 @@
 <section class="timer-panel" aria-label="Pomodoro">
   <header class="panel-header">
     <h2>Pomodoro</h2>
-    {#if notificationPermissionLoaded && !notificationPermissionGranted}
+    <div class="panel-header-actions">
+      {#if notificationPermissionLoaded && !notificationPermissionGranted}
+        <button
+          class="icon-button subtle-icon-button"
+          type="button"
+          aria-label="Enable notifications"
+          title="Enable notifications"
+          onclick={() => void requestNotifications()}
+        >
+          <Bell size={16} strokeWidth={2.2} aria-hidden="true" />
+        </button>
+      {/if}
       <button
         class="icon-button subtle-icon-button"
+        class:active-icon-button={soundSettingsOpen}
         type="button"
-        aria-label="Enable notifications"
-        title="Enable notifications"
-        onclick={() => void requestNotifications()}
+        aria-label="Sound settings"
+        title="Sound settings"
+        aria-pressed={soundSettingsOpen}
+        onclick={() => {
+          soundSettingsOpen = !soundSettingsOpen;
+        }}
       >
-        <Bell size={16} strokeWidth={2.2} aria-hidden="true" />
+        <SlidersHorizontal size={16} strokeWidth={2.2} aria-hidden="true" />
       </button>
-    {/if}
+    </div>
   </header>
 
   <div class="timer-face" aria-label={`${formattedRemainingTime} remaining`}>
@@ -183,6 +216,35 @@
       </button>
     </div>
   </div>
+
+  {#if soundSettingsOpen}
+    <div class="sound-settings" aria-label="Pomodoro sound settings">
+      <label>
+        <span>Focus</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          bind:value={focusVolumePercent}
+          aria-label="Focus sound volume"
+        />
+        <output>{focusVolumePercent}</output>
+      </label>
+      <label>
+        <span>Complete</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          bind:value={completionVolumePercent}
+          aria-label="Completion sound volume"
+        />
+        <output>{completionVolumePercent}</output>
+      </label>
+    </div>
+  {/if}
 </section>
 
 <style>
@@ -202,6 +264,12 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+  }
+
+  .panel-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   h2 {
@@ -270,5 +338,41 @@
   .subtle-icon-button:hover {
     background: rgba(74, 68, 56, 0.08);
     color: #20211f;
+  }
+
+  .active-icon-button,
+  .active-icon-button:hover {
+    border-color: rgba(89, 113, 62, 0.24);
+    background: rgba(89, 113, 62, 0.12);
+    color: #20211f;
+  }
+
+  .sound-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 10px;
+    border: 1px solid rgba(43, 41, 36, 0.12);
+    border-radius: 8px;
+    background: #fffdf8;
+  }
+
+  .sound-settings label {
+    display: grid;
+    grid-template-columns: 4.4rem minmax(0, 1fr) 2rem;
+    align-items: center;
+    gap: 8px;
+    color: #5a5449;
+    font-size: 0.8rem;
+  }
+
+  .sound-settings input {
+    width: 100%;
+  }
+
+  .sound-settings output {
+    color: #6d675d;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
   }
 </style>

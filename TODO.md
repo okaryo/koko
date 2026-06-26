@@ -131,7 +131,7 @@ Pin decisions:
 - [x] Add keyboard shortcuts
 - [x] Add completion notification
 - [x] Add focus and completion sounds
-- [ ] Add Pomodoro sound volume settings
+- [x] Add Pomodoro sound volume settings
 - [ ] Add Pomodoro sound source settings
 - [ ] Persist timer settings
 
@@ -143,6 +143,7 @@ Pomodoro decisions:
 - Session counts and analytics are not planned for the core app.
 - Pomodoro completion sends a notification when notification permission has been granted.
 - Pomodoro plays a quiet focus tick/tock loop while running and a completion sound when the timer completes.
+- Pomodoro focus and completion sound volume can be adjusted from the timer panel.
 
 ---
 
