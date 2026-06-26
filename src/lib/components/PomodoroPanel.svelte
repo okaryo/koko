@@ -4,6 +4,11 @@
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
+  import { createKokoAudio, createKokoAudioSequence } from "$lib/audio/player";
+  import {
+    pomodoroCompletionSounds,
+    pomodoroFocusLoopSounds,
+  } from "$lib/audio/sounds";
   import { pomodoroCommandFromKeydown } from "$lib/keyboard";
   import {
     isNotificationPermissionGranted,
@@ -21,10 +26,23 @@
     type PomodoroState,
   } from "$lib/pomodoro/timer";
 
+  const POMODORO_FOCUS_VOLUME = 0.28;
+  const POMODORO_COMPLETION_VOLUME = 0.6;
+
   let pomodoroState = $state<PomodoroState>(initialPomodoroState());
   let notificationPermissionLoaded = $state(false);
   let notificationPermissionGranted = $state(false);
   let timerInterval: ReturnType<typeof setInterval> | null = null;
+  const focusLoopAudio = createKokoAudioSequence({
+    sources: pomodoroFocusLoopSounds.map((sound) => sound.src),
+    volume: POMODORO_FOCUS_VOLUME,
+    failureMessage: "Failed to play Pomodoro focus sound.",
+  });
+  const completionAudio = createKokoAudio({
+    src: pomodoroCompletionSounds[0].src,
+    volume: POMODORO_COMPLETION_VOLUME,
+    failureMessage: "Failed to play Pomodoro completion sound.",
+  });
   const formattedRemainingTime = $derived(
     formatTime(pomodoroState.remainingSeconds),
   );
@@ -37,6 +55,8 @@
 
   onDestroy(() => {
     stopTimer();
+    focusLoopAudio.dispose();
+    completionAudio.dispose();
   });
 
   function handleKeydown(event: KeyboardEvent) {
@@ -63,14 +83,18 @@
 
   function resetTimer() {
     pomodoroState = resetPomodoro(pomodoroState.durationSeconds);
+    focusLoopAudio.stop();
     stopTimer();
   }
 
   function syncTimerInterval() {
     if (!pomodoroState.running) {
+      focusLoopAudio.stop();
       stopTimer();
       return;
     }
+
+    focusLoopAudio.play();
 
     if (timerInterval) {
       return;
@@ -82,7 +106,9 @@
       pomodoroState = result.state;
 
       if (result.completed) {
+        focusLoopAudio.stop();
         stopTimer();
+        completionAudio.play();
         void sendPomodoroCompleteNotification();
       }
     }, 1000);
