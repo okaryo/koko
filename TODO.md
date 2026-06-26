@@ -95,9 +95,9 @@ Daily workspace decisions:
 - [x] Create Pin
 - [x] Edit Pin
 - [x] Archive Pin
-- [ ] Add keyboard-first Pin navigation
-- [ ] Add keyboard shortcut for creating a Pin
-- [ ] Add keyboard shortcut for archiving a Pin
+- [x] Add keyboard-first Pin navigation
+- [x] Add keyboard shortcut for creating a Pin
+- [x] Add keyboard shortcut for archiving a Pin
 
 Pin decisions:
 
@@ -106,6 +106,10 @@ Pin decisions:
 - Pins should stay visible in the window.
 - Pins are for month-level goals, reminders, and small ideas.
 - Pins should not become a task database, board, hierarchy, or tagging system.
+- `Cmd+Shift+I`: focus the new Pin input.
+- `j` / `k` and `ArrowDown` / `ArrowUp`: move Pin selection when the Pins list is focused.
+- `e`: edit the selected Pin when the Pins list is focused.
+- `Shift+D`: archive the selected Pin when the Pins list is focused.
 
 ---
 
@@ -138,7 +142,7 @@ Pomodoro decisions:
 - [x] Define app-wide shortcuts
 - [ ] Define editor shortcuts
 - [x] Define Pomodoro shortcuts
-- [ ] Define Pin shortcuts
+- [x] Define Pin shortcuts
 - [ ] Add keyboard shortcut help
 - [ ] Ensure focus behavior is predictable
 - [ ] Preserve native text editing behavior where possible

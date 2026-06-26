@@ -16,7 +16,10 @@
     type Pin,
     updatePinBody,
   } from "$lib/api/pins";
-  import { pomodoroCommandFromKeydown } from "$lib/keyboard";
+  import {
+    pinCommandFromKeydown,
+    pomodoroCommandFromKeydown,
+  } from "$lib/keyboard";
   import {
     formatTime,
     initialPomodoroState,
@@ -44,6 +47,9 @@
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
+  let newPinTextareaElement = $state<HTMLTextAreaElement>();
+  let pinListElement = $state<HTMLDivElement>();
+  let selectedPinId = $state<number | null>(null);
   let editingPinId = $state<number | null>(null);
   let editingPinBody = $state("");
   const formattedRemainingTime = $derived(
@@ -141,6 +147,7 @@
       const pin = await createPersistedPin(body, Date.now());
 
       pins = [pin, ...pins];
+      selectedPinId = pin.id;
       newPinBody = "";
     } catch (error) {
       console.warn("Pin create failed", error);
@@ -150,18 +157,21 @@
   async function archivePin(id: number) {
     if (!isTauriRuntime()) {
       pins = pins.filter((pin) => pin.id !== id);
+      ensureSelectedPin();
       return;
     }
 
     try {
       await archivePersistedPin(id, Date.now());
       pins = pins.filter((pin) => pin.id !== id);
+      ensureSelectedPin();
     } catch (error) {
       console.warn("Pin archive failed", error);
     }
   }
 
   function startEditingPin(pin: Pin) {
+    selectedPinId = pin.id;
     editingPinId = pin.id;
     editingPinBody = pin.body;
   }
@@ -218,18 +228,54 @@
   function handleKeydown(event: KeyboardEvent) {
     const pomodoroCommand = pomodoroCommandFromKeydown(event);
 
-    if (!pomodoroCommand) {
+    if (pomodoroCommand) {
+      event.preventDefault();
+
+      if (pomodoroCommand === "toggle") {
+        toggleTimer();
+        return;
+      }
+
+      resetTimer();
+      return;
+    }
+
+    const pinCommand = pinCommandFromKeydown(event);
+
+    if (!pinCommand) {
+      return;
+    }
+
+    if (pinCommand !== "focusCreate" && !pinsPanelContainsFocus()) {
+      return;
+    }
+
+    if (pinCommand !== "focusCreate" && isTextInputTarget(event.target)) {
       return;
     }
 
     event.preventDefault();
+    handlePinCommand(pinCommand);
+  }
 
-    if (pomodoroCommand === "toggle") {
-      toggleTimer();
-      return;
+  function handlePinCommand(command: ReturnType<typeof pinCommandFromKeydown>) {
+    switch (command) {
+      case "focusCreate":
+        newPinTextareaElement?.focus();
+        break;
+      case "moveDown":
+        movePinSelection(1);
+        break;
+      case "moveUp":
+        movePinSelection(-1);
+        break;
+      case "editSelected":
+        editSelectedPin();
+        break;
+      case "archiveSelected":
+        void archiveSelectedPin();
+        break;
     }
-
-    resetTimer();
   }
 
   function toggleTimer() {
@@ -322,6 +368,67 @@
     dailyNoteSaveTimeout = null;
   }
 
+  function movePinSelection(delta: number) {
+    if (pins.length === 0) {
+      selectedPinId = null;
+      return;
+    }
+
+    const currentIndex = Math.max(
+      0,
+      pins.findIndex((pin) => pin.id === selectedPinId),
+    );
+    const nextIndex = Math.min(
+      pins.length - 1,
+      Math.max(0, currentIndex + delta),
+    );
+
+    selectedPinId = pins[nextIndex].id;
+  }
+
+  function editSelectedPin() {
+    const selectedPin = pins.find((pin) => pin.id === selectedPinId) ?? pins[0];
+
+    if (selectedPin) {
+      startEditingPin(selectedPin);
+    }
+  }
+
+  async function archiveSelectedPin() {
+    const selectedPin = pins.find((pin) => pin.id === selectedPinId);
+
+    if (selectedPin) {
+      await archivePin(selectedPin.id);
+    }
+  }
+
+  function ensureSelectedPin() {
+    if (pins.some((pin) => pin.id === selectedPinId)) {
+      return;
+    }
+
+    selectedPinId = pins[0]?.id ?? null;
+  }
+
+  function selectPin(id: number) {
+    selectedPinId = id;
+  }
+
+  function pinsPanelContainsFocus() {
+    const activeElement = document.activeElement;
+
+    return activeElement instanceof Node && pinListElement?.contains(activeElement);
+  }
+
+  function isTextInputTarget(target: EventTarget | null) {
+    return (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      (target instanceof HTMLElement && target.isContentEditable)
+    );
+  }
+
   function formatLocalDate(date: Date) {
     const year = date.getFullYear();
     const month = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -407,6 +514,7 @@
           }}
         >
           <textarea
+            bind:this={newPinTextareaElement}
             bind:value={newPinBody}
             rows="3"
             placeholder="Pin a monthly goal, reminder, or idea..."
@@ -415,12 +523,28 @@
           <button type="submit">Pin</button>
         </form>
 
-        <div class="pin-list" aria-label="Active pins">
+        <div
+          class="pin-list"
+          aria-label="Active pins"
+          aria-activedescendant={selectedPinId
+            ? `pin-${selectedPinId}`
+            : undefined}
+          bind:this={pinListElement}
+          role="listbox"
+          tabindex="0"
+        >
           {#if pins.length === 0}
             <p class="empty-state">No pins yet.</p>
           {:else}
             {#each pins as pin (pin.id)}
-              <article class="pin">
+              <div
+                id={`pin-${pin.id}`}
+                class="pin"
+                class:pin-selected={selectedPinId === pin.id}
+                aria-selected={selectedPinId === pin.id}
+                onfocusin={() => selectPin(pin.id)}
+                role="option"
+              >
                 {#if editingPinId === pin.id}
                   <textarea
                     bind:value={editingPinBody}
@@ -444,7 +568,7 @@
                     </button>
                   </div>
                 {/if}
-              </article>
+              </div>
             {/each}
           {/if}
         </div>
@@ -683,6 +807,11 @@
     gap: 10px;
     padding: 12px;
     background: #fff4bf;
+  }
+
+  .pin-selected {
+    border-color: rgba(89, 113, 62, 0.7);
+    box-shadow: 0 0 0 1px rgba(89, 113, 62, 0.22);
   }
 
   .pin p,
