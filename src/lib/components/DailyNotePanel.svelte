@@ -5,7 +5,7 @@
   import LoaderCircle from "@lucide/svelte/icons/loader-circle";
   import type { Editor } from "@tiptap/core";
   import { formatLocalTime } from "$lib/date";
-  import { dailyNoteCommandFromKeydown } from "$lib/keyboard";
+  import { dailyNoteCommandFromKeydown, isEditableTarget } from "$lib/keyboard";
 
   type Props = {
     bodyHtml: string;
@@ -111,6 +111,10 @@
       return;
     }
 
+    if (shouldIgnoreDailyNoteCommand(event, dailyNoteCommand)) {
+      return;
+    }
+
     event.preventDefault();
 
     if (dailyNoteCommand === "focus") {
@@ -129,6 +133,38 @@
     const timestamp = formatLocalTime(new Date());
 
     editor?.chain().focus().insertContent(timestamp).run();
+  }
+
+  function shouldIgnoreDailyNoteCommand(
+    event: KeyboardEvent,
+    command: ReturnType<typeof dailyNoteCommandFromKeydown>,
+  ) {
+    if (command === "focus") {
+      return isEventTargetInsideOpenDialog(event.target);
+    }
+
+    return (
+      isEventTargetInsideOpenDialog(event.target) ||
+      isEditableTargetOutsideEditor(event.target)
+    );
+  }
+
+  function isEditableTargetOutsideEditor(target: EventTarget | null) {
+    if (!isEditableTarget(target)) {
+      return false;
+    }
+
+    return !(target instanceof Node && editorElement?.contains(target));
+  }
+
+  function isEventTargetInsideOpenDialog(target: EventTarget | null) {
+    const openDialog = document.querySelector("dialog[open]");
+
+    return (
+      target instanceof Node &&
+      openDialog instanceof HTMLDialogElement &&
+      openDialog.contains(target)
+    );
   }
 
 </script>

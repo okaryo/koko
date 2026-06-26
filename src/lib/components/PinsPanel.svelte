@@ -7,7 +7,7 @@
     type Pin,
     updatePinBody,
   } from "$lib/api/pins";
-  import { pinCommandFromKeydown } from "$lib/keyboard";
+  import { isEditableTarget, pinCommandFromKeydown } from "$lib/keyboard";
   import { disableAutocorrect } from "$lib/textAssist";
 
   let pins = $state<Pin[]>([]);
@@ -104,7 +104,7 @@
       return;
     }
 
-    if (pinCommand !== "focusCreate" && isTextInputTarget(event.target)) {
+    if (pinCommand !== "focusCreate" && isEditableTarget(event.target)) {
       return;
     }
 
@@ -182,15 +182,6 @@
     const activeElement = document.activeElement;
 
     return activeElement instanceof Node && pinListElement?.contains(activeElement);
-  }
-
-  function isTextInputTarget(target: EventTarget | null) {
-    return (
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target instanceof HTMLSelectElement ||
-      (target instanceof HTMLElement && target.isContentEditable)
-    );
   }
 </script>
 

@@ -154,8 +154,8 @@ Pomodoro decisions:
 - [x] Define Pomodoro shortcuts
 - [x] Define Pin shortcuts
 - [x] Add keyboard shortcut help
-- [ ] Ensure focus behavior is predictable
-- [ ] Preserve native text editing behavior where possible
+- [x] Ensure focus behavior is predictable
+- [x] Preserve native text editing behavior where possible
 
 Keyboard decisions:
 
@@ -163,6 +163,8 @@ Keyboard decisions:
 - Shortcut design should prioritize writing flow over app navigation.
 - Current's keyboard handling is a useful reference, but koko has fewer sections.
 - All major DailyNote, Pin, and Pomodoro operations must be keyboard-accessible.
+- DailyNote timestamp insertion does not run while focus is in another text input.
+- Open dialogs block DailyNote editor shortcuts so commands do not affect the editor behind the dialog.
 - `Cmd+Shift+P`: start, pause, or continue Pomodoro.
 - `Cmd+Shift+R`: reset Pomodoro.
 - `Cmd+/`: open or close keyboard shortcut help.
