@@ -35,12 +35,14 @@
       { default: Placeholder },
       { default: TaskList },
       { default: TaskItem },
+      { MarkdownTaskInput },
     ] = await Promise.all([
       import("@tiptap/core"),
       import("@tiptap/starter-kit"),
       import("@tiptap/extension-placeholder"),
       import("@tiptap/extension-task-list"),
       import("@tiptap/extension-task-item"),
+      import("$lib/editor/markdownTaskInput"),
     ]);
 
     if (!editorElement) {
@@ -56,6 +58,7 @@
         TaskItem.configure({
           nested: true,
         }),
+        MarkdownTaskInput,
         Placeholder.configure({
           placeholder:
             "Write tasks, logs, decisions, links, and return points...",

@@ -73,8 +73,8 @@ Setup decisions:
 - [x] Add explicit "Start today's note" action
 - [ ] Add unsaved/error state handling if needed
 - [x] Add keyboard-first editor focus behavior
-- [ ] Add list continuation behavior
-- [ ] Add checkbox continuation behavior
+- [x] Add list continuation behavior
+- [x] Add checkbox continuation behavior
 - [x] Add timestamp insertion command
 
 Daily workspace decisions:
@@ -88,6 +88,8 @@ Daily workspace decisions:
 - Starting today's note saves the current DailyNote first, then loads or creates today's DailyNote.
 - `Cmd+Shift+N`: focus the DailyNote editor.
 - `Ctrl+T`: insert `HH:mm` at the current DailyNote cursor position.
+- Tiptap handles normal list continuation for `- ` and `1. ` input.
+- `- [ ] ` and `- [x] ` create checkbox items in the DailyNote editor.
 
 ---
 
