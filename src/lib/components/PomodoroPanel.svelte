@@ -310,8 +310,10 @@
 <style>
   .timer-panel {
     display: flex;
+    min-width: 0;
     min-height: 0;
     flex-direction: column;
+    flex: 0 0 auto;
     gap: 12px;
     padding: 0.9rem;
     border: 1px solid rgba(43, 41, 36, 0.12);
@@ -321,6 +323,7 @@
 
   .panel-header {
     display: flex;
+    min-width: 0;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -341,6 +344,7 @@
 
   .timer-face {
     display: flex;
+    min-width: 0;
     min-height: 84px;
     align-items: center;
     justify-content: space-between;
@@ -409,6 +413,7 @@
 
   .sound-settings {
     display: flex;
+    min-width: 0;
     flex-direction: column;
     gap: 9px;
     padding: 10px;
@@ -419,7 +424,7 @@
 
   .sound-settings label {
     display: grid;
-    grid-template-columns: 4.4rem minmax(0, 1fr) 2rem;
+    grid-template-columns: minmax(3.8rem, 4.4rem) minmax(0, 1fr) 2rem;
     align-items: center;
     gap: 8px;
     color: #5a5449;

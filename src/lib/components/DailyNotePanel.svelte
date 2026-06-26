@@ -171,6 +171,7 @@
 <style>
   .note-panel {
     display: flex;
+    min-width: 0;
     min-height: 0;
     flex-direction: column;
     gap: 0.85rem;
@@ -200,8 +201,14 @@
 
   .note-header-actions {
     display: flex;
+    min-width: 0;
     align-items: center;
     gap: 10px;
+  }
+
+  .note-header-actions button {
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
   .save-status {
@@ -249,6 +256,7 @@
 
   .daily-note {
     flex: 1;
+    min-width: 0;
     min-height: 0;
     overflow: auto;
     border: 1px solid rgba(43, 41, 36, 0.12);
@@ -257,6 +265,7 @@
   }
 
   :global(.daily-note-editor) {
+    width: 100%;
     min-height: 100%;
     padding: 20px;
     outline: none;

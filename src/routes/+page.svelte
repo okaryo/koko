@@ -198,10 +198,15 @@
     box-sizing: border-box;
   }
 
+  :global(html),
+  :global(body) {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
   :global(body) {
     margin: 0;
-    min-width: 860px;
-    min-height: 640px;
     color: #20211f;
     background: #f4f1ea;
     font-family:
@@ -246,21 +251,29 @@
   }
 
   .app-shell {
-    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
   }
 
   .workspace {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 18.5rem;
+    grid-template-columns: minmax(0, 1fr) clamp(14.5rem, 32vw, 18.5rem);
     gap: 0.8rem;
-    min-height: 100vh;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
     padding: 0.8rem;
+    overflow: hidden;
   }
 
   .side-panel {
     display: flex;
+    min-width: 0;
     min-height: 0;
     flex-direction: column;
     gap: 0.8rem;
+    overflow: hidden;
   }
 </style>

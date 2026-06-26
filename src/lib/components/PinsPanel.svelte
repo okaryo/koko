@@ -276,6 +276,7 @@
 <style>
   .pins-panel {
     display: flex;
+    min-width: 0;
     min-height: 0;
     flex: 1;
     flex-direction: column;
@@ -284,6 +285,7 @@
     border: 1px solid rgba(43, 41, 36, 0.12);
     border-radius: 8px;
     background: rgba(255, 252, 246, 0.82);
+    overflow: hidden;
   }
 
   .panel-header {
@@ -302,6 +304,8 @@
 
   .pin-form {
     display: flex;
+    min-width: 0;
+    flex: 0 0 auto;
     flex-direction: column;
     gap: 8px;
     padding: 10px;
@@ -321,7 +325,9 @@
 
   .pin-list {
     display: flex;
+    min-width: 0;
     min-height: 0;
+    flex: 1;
     flex-direction: column;
     gap: 10px;
     overflow: auto;
