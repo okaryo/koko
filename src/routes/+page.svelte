@@ -31,19 +31,15 @@
     type PomodoroState,
   } from "$lib/pomodoro/timer";
 
-  const today = new Intl.DateTimeFormat("en", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(new Date());
-  const activeNoteDate = formatLocalDate(new Date());
-
   let editorElement = $state<HTMLDivElement>();
   let dailyNoteHtml = $state("");
   let editor: Editor | null = null;
   let activeDailyNote = $state<DailyNote | null>(null);
+  let activeNoteDate = $state(formatLocalDate(new Date()));
+  let currentDate = $state(formatLocalDate(new Date()));
   let pomodoroState = $state<PomodoroState>(initialPomodoroState());
   let timerInterval: ReturnType<typeof setInterval> | null = null;
+  let dateCheckInterval: ReturnType<typeof setInterval> | null = null;
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
@@ -57,6 +53,8 @@
   );
   const timerStatus = $derived(pomodoroStatus(pomodoroState));
   const timerActionLabel = $derived(pomodoroPrimaryActionLabel(pomodoroState));
+  const activeNoteDateLabel = $derived(formatDateLabel(activeNoteDate));
+  const canStartTodayNote = $derived(currentDate > activeNoteDate);
 
   onMount(async () => {
     if (!editorElement || editor) {
@@ -66,6 +64,9 @@
     activeDailyNote = await loadActiveDailyNote();
     dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
     pins = await loadPins();
+    dateCheckInterval = setInterval(() => {
+      currentDate = formatLocalDate(new Date());
+    }, 60_000);
 
     const [
       { Editor },
@@ -116,6 +117,7 @@
 
   onDestroy(() => {
     stopTimer();
+    stopDateCheck();
     clearDailyNoteSaveTimeout();
     editor?.destroy();
     editor = null;
@@ -331,6 +333,23 @@
     }
   }
 
+  async function startTodayNote() {
+    const todayDate = formatLocalDate(new Date());
+
+    if (todayDate <= activeNoteDate) {
+      return;
+    }
+
+    await saveCurrentDailyNoteImmediately();
+
+    activeNoteDate = todayDate;
+    currentDate = todayDate;
+    activeDailyNote = await loadActiveDailyNote();
+    dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
+
+    editor?.commands.setContent(dailyNoteHtml);
+  }
+
   function scheduleDailyNoteSave(bodyHtml: string) {
     if (!activeDailyNote || !isTauriRuntime()) {
       return;
@@ -366,6 +385,25 @@
 
     clearTimeout(dailyNoteSaveTimeout);
     dailyNoteSaveTimeout = null;
+  }
+
+  async function saveCurrentDailyNoteImmediately() {
+    clearDailyNoteSaveTimeout();
+
+    if (!activeDailyNote || !editor || !isTauriRuntime()) {
+      return;
+    }
+
+    await saveDailyNoteBody(editor.getHTML());
+  }
+
+  function stopDateCheck() {
+    if (!dateCheckInterval) {
+      return;
+    }
+
+    clearInterval(dateCheckInterval);
+    dateCheckInterval = null;
   }
 
   function movePinSelection(delta: number) {
@@ -437,6 +475,17 @@
     return `${year}-${month}-${day}`;
   }
 
+  function formatDateLabel(dateString: string) {
+    const [year, month, day] = dateString.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return new Intl.DateTimeFormat("en", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  }
+
   function isTauriRuntime() {
     return "__TAURI_INTERNALS__" in window;
   }
@@ -448,8 +497,12 @@
   <div class="workspace">
     <section class="note-panel" aria-label="DailyNote editor">
       <header class="panel-header note-header">
-        <h1>{today}</h1>
-        <button type="button">Start today's note</button>
+        <h1>{activeNoteDateLabel}</h1>
+        {#if canStartTodayNote}
+          <button type="button" onclick={startTodayNote}>
+            Start today's note
+          </button>
+        {/if}
       </header>
 
       <div

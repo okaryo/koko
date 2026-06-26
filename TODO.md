@@ -70,7 +70,7 @@ Setup decisions:
 - [x] Create main Tiptap editor UI
 - [x] Persist the active DailyNote locally
 - [x] Load the active DailyNote on launch
-- [ ] Add explicit "Start today's note" action
+- [x] Add explicit "Start today's note" action
 - [ ] Add unsaved/error state handling if needed
 - [ ] Add keyboard-first editor focus behavior
 - [ ] Add list continuation behavior
@@ -84,6 +84,8 @@ Daily workspace decisions:
 - Tiptap is the editor foundation.
 - DailyNote content should remain portable as Markdown-like content.
 - Avoid hidden metadata inside the document unless it is necessary and discussed.
+- `Start today's note` appears only when the current local date is later than the active DailyNote date.
+- Starting today's note saves the current DailyNote first, then loads or creates today's DailyNote.
 
 ---
 
