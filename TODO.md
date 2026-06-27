@@ -50,7 +50,7 @@ Open product questions:
 - [x] Setup SvelteKit static adapter
 - [x] Add Tiptap dependencies
 - [ ] Setup linting and formatting
-- [ ] Setup Vitest
+- [x] Setup Vitest
 - [x] Setup Rust crate structure
 - [x] Setup Tauri capabilities
 - [x] Setup basic window configuration
@@ -202,7 +202,7 @@ Decision criteria:
 - [ ] Add tests for Markdown editing helpers
 - [ ] Add tests for DailyNote lifecycle logic
 - [x] Add tests for Pin behavior
-- [ ] Add tests for Pomodoro state transitions
+- [x] Add tests for Pomodoro state transitions
 - [x] Add Rust tests for persistence logic
 - [ ] Add a small manual keyboard workflow checklist
 
