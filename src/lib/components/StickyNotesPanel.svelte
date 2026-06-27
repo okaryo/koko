@@ -232,6 +232,23 @@
       event.key === "Enter"
     );
   }
+
+  function autoResizeTextarea(textarea: HTMLTextAreaElement) {
+    const resize = () => {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    };
+    const animationFrame = requestAnimationFrame(resize);
+
+    textarea.addEventListener("input", resize);
+
+    return {
+      destroy() {
+        cancelAnimationFrame(animationFrame);
+        textarea.removeEventListener("input", resize);
+      },
+    };
+  }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -262,6 +279,7 @@
         placeholder="Add a note..."
         spellcheck="false"
         aria-label="New sticky note"
+        use:autoResizeTextarea
         onkeydown={handleComposerKeydown}
         onblur={() => void createStickyNote()}></textarea>
     </div>
@@ -288,6 +306,7 @@
               autocomplete="off"
               spellcheck="false"
               aria-label="Edit sticky note"
+              use:autoResizeTextarea
               onclick={(event) => event.stopPropagation()}
               onkeydown={handleEditKeydown}
               onblur={() => void saveEditingStickyNote()}></textarea>
@@ -411,7 +430,7 @@
     flex-direction: column;
     gap: 8px;
     min-height: 82px;
-    padding: 14px 36px 16px 14px;
+    padding: 12px;
     box-shadow: 0 4px 10px rgba(65, 52, 22, 0.08);
     border-radius: 6px;
     background: #ffe37a;
@@ -431,7 +450,7 @@
     display: block;
     width: 100%;
     min-height: 80px;
-    padding: 14px 68px 16px 14px;
+    padding: 12px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -519,6 +538,8 @@
     color: #4a4438;
     line-height: 1.45;
     font-size: 0.9rem;
+    overflow: hidden;
+    resize: none;
   }
 
   .sticky-note textarea:focus-visible {
