@@ -41,9 +41,9 @@ describe("keyboard shortcuts", () => {
         keydown({ key: "n", metaKey: true, shiftKey: true }),
       ),
     ).toBe("focus");
-    expect(dailyNoteCommandFromKeydown(keydown({ key: "t", ctrlKey: true }))).toBe(
-      "insertTimestamp",
-    );
+    expect(
+      dailyNoteCommandFromKeydown(keydown({ key: "t", ctrlKey: true })),
+    ).toBe("insertTimestamp");
     expect(
       dailyNoteCommandFromKeydown(
         keydown({ key: "t", metaKey: true, shiftKey: true }),
@@ -70,7 +70,9 @@ describe("keyboard shortcuts", () => {
       "toggleKeyboardHelp",
     );
     expect(
-      appCommandFromKeydown(keydown({ key: "/", metaKey: true, shiftKey: true })),
+      appCommandFromKeydown(
+        keydown({ key: "/", metaKey: true, shiftKey: true }),
+      ),
     ).toBeNull();
   });
 });

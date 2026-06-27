@@ -175,7 +175,7 @@
   <div class="workspace">
     <DailyNotePanel
       bodyHtml={dailyNoteHtml}
-      canStartTodayNote={canStartTodayNote}
+      {canStartTodayNote}
       dateLabel={activeNoteDateLabel}
       saveStatus={dailyNoteSaveStatus}
       onBodyChange={handleDailyNoteBodyChange}
@@ -213,8 +213,13 @@
     color: #20211f;
     background: #f4f1ea;
     font-family:
-      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-      "Segoe UI", sans-serif;
+      Inter,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
   }
 
   :global(button),

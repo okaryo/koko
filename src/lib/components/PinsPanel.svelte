@@ -181,7 +181,9 @@
   function pinsPanelContainsFocus() {
     const activeElement = document.activeElement;
 
-    return activeElement instanceof Node && pinListElement?.contains(activeElement);
+    return (
+      activeElement instanceof Node && pinListElement?.contains(activeElement)
+    );
   }
 </script>
 
@@ -208,8 +210,7 @@
       autocomplete="off"
       placeholder="Pin a monthly goal, reminder, or idea..."
       spellcheck="false"
-      aria-label="New pin"
-    ></textarea>
+      aria-label="New pin"></textarea>
     <button type="submit">Pin</button>
   </form>
 
@@ -241,8 +242,7 @@
               autocapitalize="off"
               autocomplete="off"
               spellcheck="false"
-              aria-label="Edit pin"
-            ></textarea>
+              aria-label="Edit pin"></textarea>
             <div class="pin-actions">
               <button type="button" onclick={saveEditingPin}>Save</button>
               <button type="button" onclick={cancelEditingPin}>Cancel</button>

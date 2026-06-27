@@ -166,7 +166,6 @@
       openDialog.contains(target)
     );
   }
-
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

@@ -49,7 +49,7 @@ Open product questions:
 - [x] Setup TypeScript
 - [x] Setup SvelteKit static adapter
 - [x] Add Tiptap dependencies
-- [ ] Setup linting and formatting
+- [x] Setup linting and formatting
 - [x] Setup Vitest
 - [x] Setup Rust crate structure
 - [x] Setup Tauri capabilities

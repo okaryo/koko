@@ -4,10 +4,7 @@
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
-  import {
-    getSettings,
-    updatePomodoroVolumeSettings,
-  } from "$lib/api/settings";
+  import { getSettings, updatePomodoroVolumeSettings } from "$lib/api/settings";
   import SlidersHorizontal from "@lucide/svelte/icons/sliders-horizontal";
   import { createKokoAudio, createKokoAudioSequence } from "$lib/audio/player";
   import {
