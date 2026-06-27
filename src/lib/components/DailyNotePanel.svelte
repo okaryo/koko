@@ -43,68 +43,78 @@
   }: Props = $props();
 
   let editorElement = $state<HTMLDivElement>();
-  let editor: Editor | null = null;
+  let editor = $state<Editor | null>(null);
   let applyingExternalContent = false;
   let copyStatus = $state<"idle" | "copied" | "error">("idle");
   let copyStatusTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  onMount(async () => {
-    if (!editorElement || editor) {
-      return;
-    }
+  onMount(() => {
+    let isMounted = true;
 
-    const [
-      { Editor },
-      { default: StarterKit },
-      { default: Placeholder },
-      { default: TaskList },
-      { default: TaskItem },
-      { MarkdownTaskInput },
-    ] = await Promise.all([
-      import("@tiptap/core"),
-      import("@tiptap/starter-kit"),
-      import("@tiptap/extension-placeholder"),
-      import("@tiptap/extension-task-list"),
-      import("@tiptap/extension-task-item"),
-      import("$lib/editor/markdownTaskInput"),
-    ]);
+    async function createEditor() {
+      if (!editorElement || editor) {
+        return;
+      }
 
-    if (!editorElement) {
-      return;
-    }
+      const [
+        { Editor },
+        { default: StarterKit },
+        { default: Placeholder },
+        { default: TaskList },
+        { default: TaskItem },
+        { MarkdownTaskInput },
+      ] = await Promise.all([
+        import("@tiptap/core"),
+        import("@tiptap/starter-kit"),
+        import("@tiptap/extension-placeholder"),
+        import("@tiptap/extension-task-list"),
+        import("@tiptap/extension-task-item"),
+        import("$lib/editor/markdownTaskInput"),
+      ]);
 
-    editor = new Editor({
-      element: editorElement,
-      content: bodyHtml,
-      extensions: [
-        StarterKit,
-        TaskList,
-        TaskItem.configure({
-          nested: true,
-        }),
-        MarkdownTaskInput,
-        Placeholder.configure({
-          placeholder: "Start writing...",
-        }),
-      ],
-      editorProps: {
-        attributes: {
-          "aria-label": "DailyNote body",
-          autocapitalize: "off",
-          autocomplete: "off",
-          autocorrect: "off",
-          class: "daily-note-editor",
-          spellcheck: "false",
+      if (!isMounted || !editorElement) {
+        return;
+      }
+
+      editor = new Editor({
+        element: editorElement,
+        content: bodyHtml,
+        extensions: [
+          StarterKit,
+          TaskList,
+          TaskItem.configure({
+            nested: true,
+          }),
+          MarkdownTaskInput,
+          Placeholder.configure({
+            placeholder: "Start writing...",
+          }),
+        ],
+        editorProps: {
+          attributes: {
+            "aria-label": "DailyNote body",
+            autocapitalize: "off",
+            autocomplete: "off",
+            autocorrect: "off",
+            class: "daily-note-editor",
+            spellcheck: "false",
+          },
         },
-      },
-      onUpdate: ({ editor: updatedEditor }) => {
-        if (applyingExternalContent) {
-          return;
-        }
+        onUpdate: ({ editor: updatedEditor }) => {
+          if (applyingExternalContent) {
+            return;
+          }
 
-        onBodyChange(updatedEditor.getHTML());
-      },
-    });
+          onBodyChange(updatedEditor.getHTML());
+        },
+      });
+    }
+
+    void createEditor();
+
+    return () => {
+      isMounted = false;
+    };
   });
 
   $effect(() => {
