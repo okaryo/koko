@@ -1,6 +1,10 @@
 import { Extension, wrappingInputRule } from "@tiptap/core";
 
-const markdownTaskInputRegex = /^\s*[-+*]\s\[([ xX])\]\s$/;
+export const markdownTaskInputRegex = /^\s*[-+*]\s\[([ xX])\]\s$/;
+
+export function checkedFromMarkdownTaskInputMatch(match: RegExpMatchArray) {
+  return match[1]?.toLowerCase() === "x";
+}
 
 export const MarkdownTaskInput = Extension.create({
   name: "markdownTaskInput",
@@ -17,7 +21,7 @@ export const MarkdownTaskInput = Extension.create({
         find: markdownTaskInputRegex,
         type: taskItemType,
         getAttributes: (match) => ({
-          checked: match[1]?.toLowerCase() === "x",
+          checked: checkedFromMarkdownTaskInputMatch(match),
         }),
       }),
     ];

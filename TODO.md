@@ -199,8 +199,8 @@ Decision criteria:
 
 ## Phase 7 - Testing
 
-- [ ] Add tests for Markdown editing helpers
-- [ ] Add tests for DailyNote lifecycle logic
+- [x] Add tests for Markdown editing helpers
+- [x] Add tests for DailyNote lifecycle logic
 - [x] Add tests for Pin behavior
 - [x] Add tests for Pomodoro state transitions
 - [x] Add Rust tests for persistence logic
