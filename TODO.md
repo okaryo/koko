@@ -96,9 +96,9 @@ Daily workspace decisions:
 
 ## Phase 3 - Pins
 
-- [ ] Create Pin model
+- [x] Create Pin model
 - [x] Persist Pins in SQLite
-- [ ] Create visible Pins UI
+- [x] Create visible Pins UI
 - [x] Create Pin
 - [x] Edit Pin
 - [x] Archive Pin
@@ -204,7 +204,7 @@ Decision criteria:
 - [x] Add tests for Pin behavior
 - [x] Add tests for Pomodoro state transitions
 - [x] Add Rust tests for persistence logic
-- [ ] Add a small manual keyboard workflow checklist
+- [x] Add a small manual keyboard workflow checklist
 
 Testing decisions:
 

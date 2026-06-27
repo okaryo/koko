@@ -10,6 +10,7 @@
   import PinsPanel from "$lib/components/PinsPanel.svelte";
   import PomodoroPanel from "$lib/components/PomodoroPanel.svelte";
   import { formatDateLabel, formatLocalDate } from "$lib/date";
+  import { canStartTodayNote as canStartTodayNoteForDates } from "$lib/dailyNote/lifecycle";
   import { appCommandFromKeydown } from "$lib/keyboard";
 
   type DailyNoteSaveStatus = "idle" | "saving" | "saved" | "error";
@@ -24,7 +25,9 @@
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let dailyNoteSavedStatusTimeout: ReturnType<typeof setTimeout> | null = null;
   const activeNoteDateLabel = $derived(formatDateLabel(activeNoteDate));
-  const canStartTodayNote = $derived(currentDate > activeNoteDate);
+  const canStartTodayNote = $derived(
+    canStartTodayNoteForDates(activeNoteDate, currentDate),
+  );
 
   onMount(async () => {
     activeDailyNote = await loadDailyNote(activeNoteDate);
