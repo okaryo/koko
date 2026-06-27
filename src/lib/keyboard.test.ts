@@ -42,6 +42,11 @@ describe("keyboard shortcuts", () => {
       ),
     ).toBe("focus");
     expect(
+      dailyNoteCommandFromKeydown(
+        keydown({ key: "c", metaKey: true, shiftKey: true }),
+      ),
+    ).toBe("copyMarkdown");
+    expect(
       dailyNoteCommandFromKeydown(keydown({ key: "t", ctrlKey: true })),
     ).toBe("insertTimestamp");
     expect(

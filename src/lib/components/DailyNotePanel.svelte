@@ -127,6 +127,11 @@
       return;
     }
 
+    if (dailyNoteCommand === "copyMarkdown") {
+      void copyDailyNoteMarkdown();
+      return;
+    }
+
     insertTimestamp();
   }
 

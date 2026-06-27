@@ -1,5 +1,5 @@
 export type PomodoroCommand = "toggle" | "reset";
-export type DailyNoteCommand = "focus" | "insertTimestamp";
+export type DailyNoteCommand = "focus" | "insertTimestamp" | "copyMarkdown";
 export type AppCommand = "toggleKeyboardHelp";
 export type PinCommand =
   | "focusCreate"
@@ -39,6 +39,16 @@ export function dailyNoteCommandFromKeydown(
     event.key.toLowerCase() === "n"
   ) {
     return "focus";
+  }
+
+  if (
+    event.metaKey &&
+    event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    event.key.toLowerCase() === "c"
+  ) {
+    return "copyMarkdown";
   }
 
   if (
