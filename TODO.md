@@ -55,7 +55,7 @@ Open product questions:
 - [x] Setup Tauri capabilities
 - [x] Setup basic window configuration
 - [x] Decide package manager and pin version
-- [ ] Add CI checks
+- [x] Add CI checks
 
 Setup decisions:
 
