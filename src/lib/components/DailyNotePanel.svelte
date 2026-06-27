@@ -60,16 +60,10 @@
         { Editor },
         { default: StarterKit },
         { default: Placeholder },
-        { default: TaskList },
-        { default: TaskItem },
-        { MarkdownTaskInput },
       ] = await Promise.all([
         import("@tiptap/core"),
         import("@tiptap/starter-kit"),
         import("@tiptap/extension-placeholder"),
-        import("@tiptap/extension-task-list"),
-        import("@tiptap/extension-task-item"),
-        import("$lib/editor/markdownTaskInput"),
       ]);
 
       if (!isMounted || !editorElement) {
@@ -81,11 +75,6 @@
         content: bodyHtml,
         extensions: [
           StarterKit,
-          TaskList,
-          TaskItem.configure({
-            nested: true,
-          }),
-          MarkdownTaskInput,
           Placeholder.configure({
             placeholder: "Start writing...",
           }),
