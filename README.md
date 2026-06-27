@@ -4,7 +4,7 @@ koko is a simple desktop app for staying with the work in front of you.
 
 It is the successor to Current. Current separated `Todo` and `Log` into
 different surfaces. koko intentionally removes that split: the main workspace is
-a DailyNote for the day, supported by Pins and a Pomodoro timer.
+a DailyNote for the day, supported by Sticky Notes and a Pomodoro timer.
 
 ## Philosophy
 
@@ -15,14 +15,14 @@ koko is designed to help you:
 - return to the current thread of work after interruptions
 - keep a steady working rhythm with a Pomodoro timer
 
-koko should feel like a quiet desk: one note for today, a few pinned notes, one
+koko should feel like a quiet desk: one note for today, a few sticky notes, one
 timer, and as little app-shaped ceremony as possible.
 
 ## Main Features
 
 - DailyNote workspace
 - User-triggered start of today's note
-- Pins for date-independent notes
+- Sticky Notes for date-independent notes
 - Pomodoro timer
 - Keyboard-first workflow
 - Local-first SQLite storage
@@ -44,13 +44,13 @@ The editor should be powered by Tiptap. The goal is not a rich document editor;
 it is a comfortable Markdown-like writing surface with predictable keyboard
 behavior.
 
-## Pins
+## Sticky Notes
 
-Pins are date-independent notes that remain visible in the window.
+Sticky Notes are date-independent notes that remain visible in the window.
 
 They are for month-level goals, reminders, and small ideas that should stay in
-sight while the DailyNote changes over time. Pins can be created and archived,
-but they should not become a task database or project board.
+sight while the DailyNote changes over time. Sticky Notes can be created and
+archived, but they should not become a task database or project board.
 
 ## Pomodoro
 

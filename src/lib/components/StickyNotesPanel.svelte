@@ -3,30 +3,30 @@
   import Archive from "@lucide/svelte/icons/archive";
   import Plus from "@lucide/svelte/icons/plus";
   import {
-    archivePin as archivePersistedPin,
-    createPin as createPersistedPin,
-    listPins,
-    type Pin,
-    updatePinBody,
-  } from "$lib/api/pins";
-  import { pinCommandFromKeydown } from "$lib/keyboard";
+    archiveStickyNote as archivePersistedStickyNote,
+    createStickyNote as createPersistedStickyNote,
+    listStickyNotes,
+    type StickyNote,
+    updateStickyNoteBody,
+  } from "$lib/api/stickyNotes";
+  import { stickyNoteCommandFromKeydown } from "$lib/keyboard";
   import { disableAutocorrect } from "$lib/textAssist";
 
-  let pins = $state<Pin[]>([]);
-  let newPinBody = $state("");
-  let newPinTextareaElement = $state<HTMLTextAreaElement>();
+  let stickyNotes = $state<StickyNote[]>([]);
+  let newStickyNoteBody = $state("");
+  let newStickyNoteTextareaElement = $state<HTMLTextAreaElement>();
   let composerOpen = $state(false);
-  let editingPinId = $state<number | null>(null);
-  let editingPinBody = $state("");
+  let editingStickyNoteId = $state<number | null>(null);
+  let editingStickyNoteBody = $state("");
 
   onMount(() => {
-    void loadPins().then((loadedPins) => {
-      pins = loadedPins;
+    void loadStickyNotes().then((loadedStickyNotes) => {
+      stickyNotes = loadedStickyNotes;
     });
   });
 
-  async function createPin() {
-    const body = newPinBody.trim();
+  async function createStickyNote() {
+    const body = newStickyNoteBody.trim();
 
     if (!body) {
       closeComposer();
@@ -34,12 +34,12 @@
     }
 
     try {
-      const pin = await createPersistedPin(body, Date.now());
+      const stickyNote = await createPersistedStickyNote(body, Date.now());
 
-      pins = [pin, ...pins];
+      stickyNotes = [stickyNote, ...stickyNotes];
       closeComposer();
     } catch (error) {
-      console.warn("Pin create failed", error);
+      console.warn("StickyNote create failed", error);
     }
   }
 
@@ -47,34 +47,34 @@
     composerOpen = true;
 
     await tick();
-    newPinTextareaElement?.focus();
+    newStickyNoteTextareaElement?.focus();
   }
 
   function closeComposer() {
     composerOpen = false;
-    newPinBody = "";
+    newStickyNoteBody = "";
   }
 
   function discardComposer() {
     closeComposer();
   }
 
-  async function archivePin(id: number) {
+  async function archiveStickyNote(id: number) {
     try {
-      await archivePersistedPin(id, Date.now());
-      pins = pins.filter((pin) => pin.id !== id);
+      await archivePersistedStickyNote(id, Date.now());
+      stickyNotes = stickyNotes.filter((stickyNote) => stickyNote.id !== id);
     } catch (error) {
-      console.warn("Pin archive failed", error);
+      console.warn("StickyNote archive failed", error);
     }
   }
 
-  function startEditingPin(pin: Pin) {
-    editingPinId = pin.id;
-    editingPinBody = pin.body;
+  function startEditingStickyNote(stickyNote: StickyNote) {
+    editingStickyNoteId = stickyNote.id;
+    editingStickyNoteBody = stickyNote.body;
 
     void tick().then(() => {
       const editTextarea = document.querySelector<HTMLTextAreaElement>(
-        `[data-pin-edit-id="${pin.id}"]`,
+        `[data-sticky-note-edit-id="${stickyNote.id}"]`,
       );
 
       editTextarea?.focus();
@@ -85,47 +85,49 @@
     });
   }
 
-  function stopEditingPin() {
-    editingPinId = null;
-    editingPinBody = "";
+  function stopEditingStickyNote() {
+    editingStickyNoteId = null;
+    editingStickyNoteBody = "";
   }
 
-  function discardEditingPin() {
-    stopEditingPin();
+  function discardEditingStickyNote() {
+    stopEditingStickyNote();
   }
 
-  async function saveEditingPin() {
-    if (editingPinId === null) {
+  async function saveEditingStickyNote() {
+    if (editingStickyNoteId === null) {
       return;
     }
 
     try {
-      const updatedPin = await updatePinBody(
-        editingPinId,
-        editingPinBody,
+      const updatedStickyNote = await updateStickyNoteBody(
+        editingStickyNoteId,
+        editingStickyNoteBody,
         Date.now(),
       );
 
-      pins = pins.map((pin) => (pin.id === updatedPin.id ? updatedPin : pin));
-      stopEditingPin();
+      stickyNotes = stickyNotes.map((stickyNote) =>
+        stickyNote.id === updatedStickyNote.id ? updatedStickyNote : stickyNote,
+      );
+      stopEditingStickyNote();
     } catch (error) {
-      console.warn("Pin update failed", error);
+      console.warn("StickyNote update failed", error);
     }
   }
 
-  async function loadPins() {
+  async function loadStickyNotes() {
     try {
-      return await listPins();
+      return await listStickyNotes();
     } catch (error) {
-      console.warn("Pins load failed", error);
+      console.warn("Sticky Notes load failed", error);
       return [];
     }
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    const pinCommand = pinCommandFromKeydown(event);
+    const stickyNoteCommand = stickyNoteCommandFromKeydown(event);
 
-    if (!pinCommand) {
+    if (!stickyNoteCommand) {
       return;
     }
 
@@ -136,7 +138,7 @@
   function handleComposerKeydown(event: KeyboardEvent) {
     if (isSaveShortcut(event)) {
       event.preventDefault();
-      void createPin();
+      void createStickyNote();
       return;
     }
 
@@ -149,23 +151,26 @@
   function handleEditKeydown(event: KeyboardEvent) {
     if (isSaveShortcut(event)) {
       event.preventDefault();
-      void saveEditingPin();
+      void saveEditingStickyNote();
       return;
     }
 
     if (event.key === "Escape") {
       event.preventDefault();
-      discardEditingPin();
+      discardEditingStickyNote();
     }
   }
 
-  function handlePinEditTargetKeydown(event: KeyboardEvent, pin: Pin) {
+  function handleStickyNoteEditTargetKeydown(
+    event: KeyboardEvent,
+    stickyNote: StickyNote,
+  ) {
     if (event.key !== "Enter" && event.key !== " ") {
       return;
     }
 
     event.preventDefault();
-    startEditingPin(pin);
+    startEditingStickyNote(stickyNote);
   }
 
   function isSaveShortcut(event: KeyboardEvent) {
@@ -181,14 +186,14 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section class="pins-panel" aria-label="Pins">
+<section class="sticky-notes-panel" aria-label="Sticky Notes">
   <header class="panel-header">
-    <h2>Pins</h2>
+    <h2>Sticky Notes</h2>
     <button
-      class="icon-button add-pin-button"
+      class="icon-button add-sticky-note-button"
       type="button"
-      aria-label="Create pin"
-      title="Create pin"
+      aria-label="Create sticky note"
+      title="Create sticky note"
       onclick={() => void openComposer()}
     >
       <Plus size={16} strokeWidth={2.2} aria-hidden="true" />
@@ -196,65 +201,67 @@
   </header>
 
   {#if composerOpen}
-    <div class="pin pin-composer">
+    <div class="sticky-note sticky-note-composer">
       <textarea
-        bind:this={newPinTextareaElement}
-        bind:value={newPinBody}
+        bind:this={newStickyNoteTextareaElement}
+        bind:value={newStickyNoteBody}
         rows="3"
         use:disableAutocorrect
         autocapitalize="off"
         autocomplete="off"
-        placeholder="Pin a monthly goal, reminder, or idea..."
+        placeholder="Add a monthly goal, reminder, or idea..."
         spellcheck="false"
-        aria-label="New pin"
+        aria-label="New sticky note"
         onkeydown={handleComposerKeydown}
-        onblur={() => void createPin()}></textarea>
+        onblur={() => void createStickyNote()}></textarea>
     </div>
   {/if}
 
-  <div class="pin-list" aria-label="Active pins">
-    {#if pins.length === 0}
-      <p class="empty-state">No pins yet.</p>
+  <div class="sticky-note-list" aria-label="Active sticky notes">
+    {#if stickyNotes.length === 0}
+      <p class="empty-state">No sticky notes yet.</p>
     {:else}
-      {#each pins as pin (pin.id)}
+      {#each stickyNotes as stickyNote (stickyNote.id)}
         <div
-          id={`pin-${pin.id}`}
-          class="pin"
-          class:pin-display={editingPinId !== pin.id}
+          id={`sticky-note-${stickyNote.id}`}
+          class={`sticky-note ${
+            editingStickyNoteId !== stickyNote.id ? "sticky-note-display" : ""
+          }`}
         >
-          {#if editingPinId === pin.id}
+          {#if editingStickyNoteId === stickyNote.id}
             <textarea
-              data-pin-edit-id={pin.id}
-              bind:value={editingPinBody}
+              data-sticky-note-edit-id={stickyNote.id}
+              bind:value={editingStickyNoteBody}
               rows="3"
               use:disableAutocorrect
               autocapitalize="off"
               autocomplete="off"
               spellcheck="false"
-              aria-label="Edit pin"
+              aria-label="Edit sticky note"
               onclick={(event) => event.stopPropagation()}
               onkeydown={handleEditKeydown}
-              onblur={() => void saveEditingPin()}></textarea>
+              onblur={() => void saveEditingStickyNote()}></textarea>
           {:else}
             <div
-              class="pin-edit-button"
-              aria-label="Edit pin"
+              class="sticky-note-edit-button"
+              aria-label="Edit sticky note"
               role="button"
               tabindex="0"
-              onclick={() => startEditingPin(pin)}
-              onkeydown={(event) => handlePinEditTargetKeydown(event, pin)}
+              onclick={() => startEditingStickyNote(stickyNote)}
+              onkeydown={(event) =>
+                handleStickyNoteEditTargetKeydown(event, stickyNote)}
             >
-              <p>{pin.body}</p>
+              <p>{stickyNote.body}</p>
             </div>
-            <div class="pin-actions">
+            <div class="sticky-note-actions">
               <button
-                class="icon-button pin-action-button"
+                class="icon-button sticky-note-action-button"
                 type="button"
-                aria-label="Archive pin"
-                title="Archive pin"
+                aria-label="Archive sticky note"
+                title="Archive sticky note"
                 onclick={(event) => {
                   event.stopPropagation();
-                  void archivePin(pin.id);
+                  void archiveStickyNote(stickyNote.id);
                 }}
               >
                 <Archive size={14} strokeWidth={2.2} aria-hidden="true" />
@@ -268,7 +275,7 @@
 </section>
 
 <style>
-  .pins-panel {
+  .sticky-notes-panel {
     display: flex;
     min-width: 0;
     min-height: 0;
@@ -314,7 +321,7 @@
     color: #20211f;
   }
 
-  .pin-list {
+  .sticky-note-list {
     display: flex;
     min-width: 0;
     min-height: 0;
@@ -324,7 +331,7 @@
     overflow: auto;
   }
 
-  .pin {
+  .sticky-note {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -339,11 +346,11 @@
     overflow: hidden;
   }
 
-  .pin-display {
+  .sticky-note-display {
     padding: 0;
   }
 
-  .pin-edit-button {
+  .sticky-note-edit-button {
     display: block;
     width: 100%;
     min-height: 80px;
@@ -357,17 +364,17 @@
     cursor: text;
   }
 
-  .pin-edit-button:focus-visible {
+  .sticky-note-edit-button:focus-visible {
     outline: 2px solid rgba(89, 113, 62, 0.28);
     outline-offset: -3px;
   }
 
-  .pin-edit-button:hover {
+  .sticky-note-edit-button:hover {
     background: transparent;
     color: inherit;
   }
 
-  .pin::before {
+  .sticky-note::before {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -378,7 +385,7 @@
     pointer-events: none;
   }
 
-  .pin::after {
+  .sticky-note::after {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -391,11 +398,11 @@
     pointer-events: none;
   }
 
-  .pin-composer {
+  .sticky-note-composer {
     flex: 0 0 auto;
   }
 
-  .pin p,
+  .sticky-note p,
   .empty-state {
     margin: 0;
     color: #4a4438;
@@ -404,7 +411,7 @@
     white-space: pre-wrap;
   }
 
-  .pin-action-button {
+  .sticky-note-action-button {
     width: 28px;
     min-width: 28px;
     height: 28px;
@@ -412,7 +419,7 @@
     cursor: default;
   }
 
-  .pin textarea {
+  .sticky-note textarea {
     min-height: 78px;
     padding: 0;
     border: 0;
@@ -421,11 +428,11 @@
     line-height: 1.45;
   }
 
-  .pin textarea:focus-visible {
+  .sticky-note textarea:focus-visible {
     outline: none;
   }
 
-  .pin-actions {
+  .sticky-note-actions {
     position: absolute;
     z-index: 1;
     top: 8px;
@@ -436,8 +443,8 @@
     transition: opacity 120ms ease;
   }
 
-  .pin:hover .pin-actions,
-  .pin:focus-within .pin-actions {
+  .sticky-note:hover .sticky-note-actions,
+  .sticky-note:focus-within .sticky-note-actions {
     opacity: 1;
   }
 </style>

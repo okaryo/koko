@@ -9,7 +9,7 @@
 - [x] Decide the primary model name: DailyNote
 - [x] Decide the initial DailyNote lifecycle
 - [x] Decide the initial storage format: SQLite
-- [x] Decide to include Pins in v0.1.0
+- [x] Decide to include Sticky Notes in v0.1.0
 - [x] Decide to use Tiptap for the editor
 - [x] Decide not to import Current data in v0.1.0
 - [x] Decide not to include a Quick Entry window in v0.1.0
@@ -25,9 +25,9 @@ Direction decisions:
 - Checkboxes are the likely first representation for todos.
 - Starting today's note should be triggered by a user action.
 - The app should not automatically switch notes when the date changes.
-- DailyNote and Pin data should be persisted in SQLite for `v0.1.0`.
-- Pins are date-independent notes that stay visible in the window.
-- Pins should be creatable and archivable in `v0.1.0`.
+- DailyNote and StickyNote data should be persisted in SQLite for `v0.1.0`.
+- Sticky Notes are date-independent notes that stay visible in the window.
+- Sticky Notes should be creatable and archivable in `v0.1.0`.
 - The DailyNote editor should use Tiptap.
 - Pomodoro exists to support rhythm, not to drive analytics or scoring.
 - Pomodoro behavior, sound volume settings, and keyboard shortcuts should follow Current where practical.
@@ -55,13 +55,13 @@ Open product questions:
 - [x] Setup Rust crate structure
 - [x] Setup Tauri capabilities
 - [x] Setup basic window configuration
-- [x] Decide package manager and pin version
+- [x] Decide package manager and package manager version
 - [x] Add CI checks
 
 Setup decisions:
 
 - Use Current's setup as the starting reference.
-- Keep the initial app surface smaller than Current: DailyNote editor, Pins, and Pomodoro.
+- Keep the initial app surface smaller than Current: DailyNote editor, Sticky Notes, and Pomodoro.
 
 ---
 
@@ -95,30 +95,31 @@ Daily workspace decisions:
 
 ---
 
-## Phase 3 - Pins
+## Phase 3 - Sticky Notes
 
-- [x] Create Pin model
-- [x] Persist Pins in SQLite
-- [x] Create visible Pins UI
-- [x] Create Pin
-- [x] Edit Pin
-- [x] Archive Pin
-- [x] Add keyboard shortcut for creating a Pin
-- [x] Keep existing Pin management mouse-first
+- [x] Create StickyNote model
+- [x] Persist Sticky Notes in SQLite
+- [x] Create visible Sticky Notes UI
+- [x] Create StickyNote
+- [x] Edit StickyNote
+- [x] Archive StickyNote
+- [x] Add keyboard shortcut for creating a StickyNote
+- [x] Keep existing StickyNote management mouse-first
 
-Pin decisions:
+StickyNote decisions:
 
-- Pins are included in `v0.1.0`.
-- Pins are date-independent.
-- Pins should stay visible in the window.
-- Pins are for month-level goals, reminders, and small ideas.
-- Pins should not become a task database, board, hierarchy, or tagging system.
-- `Cmd+Shift+I`: focus the new Pin input.
-- `Cmd+Enter`: save a Pin composer or edit.
-- `Esc`: discard a Pin composer or edit.
-- Existing Pins are edited by clicking the sticky note.
-- Existing Pins are archived by using the hover action.
-- Pins do not have a selected state in `v0.1.0`.
+- Sticky Notes are included in `v0.1.0`.
+- Sticky Notes are date-independent.
+- Sticky Notes should stay visible in the window.
+- Sticky Notes are for month-level goals, reminders, and small ideas.
+- Sticky Notes should not become a task database, board, hierarchy, or tagging system.
+- `Cmd+Shift+I`: focus the new sticky note input.
+- `Cmd+Enter`: save a sticky note composer or edit.
+- `Esc`: discard a sticky note composer or edit.
+- Existing Sticky Notes are edited by clicking the sticky note.
+- Existing Sticky Notes are archived by using the hover action.
+- Sticky Notes do not have a selected state in `v0.1.0`.
+- Sticky Notes do not have pin/unpin behavior in `v0.1.0`.
 
 ---
 
@@ -159,7 +160,7 @@ Pomodoro decisions:
 - [x] Define app-wide shortcuts
 - [x] Define editor shortcuts
 - [x] Define Pomodoro shortcuts
-- [x] Define Pin shortcuts
+- [x] Define StickyNote shortcuts
 - [x] Add keyboard shortcut help
 - [x] Ensure focus behavior is predictable
 - [x] Preserve native text editing behavior where possible
@@ -169,7 +170,7 @@ Keyboard decisions:
 - Keyboard support is core behavior.
 - Shortcut design should prioritize writing flow over app navigation.
 - Current's keyboard handling is a useful reference, but koko has fewer sections.
-- All major DailyNote, Pin, and Pomodoro operations must be keyboard-accessible.
+- All major DailyNote, StickyNote, and Pomodoro operations must be keyboard-accessible.
 - DailyNote timestamp insertion does not run while focus is in another text input.
 - Open dialogs block DailyNote editor shortcuts so commands do not affect the editor behind the dialog.
 - `Cmd+Shift+P`: start, pause, or continue Pomodoro.
@@ -182,13 +183,13 @@ Keyboard decisions:
 
 - [x] Choose local persistence approach: SQLite
 - [x] Implement DailyNote repository
-- [x] Implement Pin repository
+- [x] Implement StickyNote repository
 - [x] Implement settings file storage
 - [x] Add SQLite migrations
 
 Persistence decisions:
 
-- Use SQLite for DailyNote and Pin persistence in `v0.1.0`.
+- Use SQLite for DailyNote and StickyNote persistence in `v0.1.0`.
 - Use `settings.json` in the app config directory for lightweight app settings.
 - Follow Current's persistence patterns where practical.
 - Keep DailyNote content export-friendly even though storage is SQLite.
@@ -207,7 +208,7 @@ Decision criteria:
 
 - [x] Add tests for Markdown editing helpers
 - [x] Add tests for DailyNote lifecycle logic
-- [x] Add tests for Pin behavior
+- [x] Add tests for StickyNote behavior
 - [x] Add tests for Pomodoro state transitions
 - [x] Add Rust tests for persistence logic
 - [x] Add a small manual keyboard workflow checklist
@@ -234,7 +235,7 @@ UI decisions:
 
 - The app should feel calm and quiet.
 - The DailyNote should visually dominate the screen.
-- Pins should be visible but should not compete with the DailyNote.
+- Sticky Notes should be visible but should not compete with the DailyNote.
 - The Pomodoro timer should remain compact and supportive.
 
 ---

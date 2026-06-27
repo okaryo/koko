@@ -5,7 +5,7 @@
 koko is a desktop app for focused work.
 
 It succeeds Current, but changes the core information model. Current separated
-`Todo` and `Log`; koko should provide one DailyNote for the day, Pins for
+`Todo` and `Log`; koko should provide one DailyNote for the day, Sticky Notes for
 date-independent notes, and a Pomodoro timer.
 
 This project values:
@@ -19,7 +19,7 @@ This project values:
 - English-only application UI
 
 Before implementing new features, consider whether the feature strengthens the
-DailyNote, Pins, or Pomodoro rhythm. If it adds classification, workflow
+DailyNote, Sticky Notes, or Pomodoro rhythm. If it adds classification, workflow
 management, analytics, or ceremony, it probably does not belong in the core app.
 
 ## Relationship To Current
@@ -42,7 +42,7 @@ Todo and Log sections.
 The main screen should be centered on:
 
 - a DailyNote editor
-- Pins
+- Sticky Notes
 - a compact Pomodoro timer
 - minimal app-level controls
 
@@ -105,12 +105,12 @@ The DailyNote editor is the user's working memory.
 Avoid UI that pulls ordinary writing into separate forms, categories, tabs, or
 databases unless there is a clear reason.
 
-### 2. Keep Pins Lightweight
+### 2. Keep Sticky Notes Lightweight
 
-Pins are visible, date-independent notes for goals, reminders, and ideas.
+Sticky Notes are visible, date-independent notes for goals, reminders, and ideas.
 
-Avoid turning Pins into a task manager, board, hierarchy, or tagging system.
-Pins should be easy to create and archive.
+Avoid turning Sticky Notes into a task manager, board, hierarchy, or tagging system.
+Sticky Notes should be easy to create and archive.
 
 ### 3. Preserve Markdown Portability
 
@@ -152,7 +152,7 @@ Use SQLite for `v0.1.0` persistence.
 - Follow existing project patterns once they exist
 - Use Current's implementation as a reference, not as a strict template
 - Use `DailyNote` for the primary day-bound note model
-- Use `Pin` for date-independent pinned notes
+- Use `StickyNote` for date-independent sticky notes
 - Keep components small and focused
 - Extract testable logic from UI components when behavior becomes meaningful
 - Avoid premature abstraction

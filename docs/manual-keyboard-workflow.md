@@ -8,7 +8,7 @@ Use this checklist before reviewing keyboard-related changes.
 - [ ] `Cmd+Shift+C` copies the current DailyNote as Markdown-like text.
 - [ ] `Ctrl+T` inserts the current local time as `HH:mm`.
 - [ ] `Ctrl+T` does not add a trailing space.
-- [ ] `Ctrl+T` does not run while focus is in a Pin input or other text field.
+- [ ] `Ctrl+T` does not run while focus is in a sticky note input or other text field.
 - [ ] `- ` continues as a list on the next line.
 - [ ] `1. ` continues as an ordered list on the next line.
 - [ ] `- [ ] ` creates an unchecked task item.
@@ -22,12 +22,12 @@ Use this checklist before reviewing keyboard-related changes.
 - [ ] `Cmd+Shift+R` resets the timer.
 - [ ] Timer controls remain usable without moving focus away from writing.
 
-## Pins
+## Sticky Notes
 
-- [ ] `Cmd+Shift+I` focuses the new Pin input.
-- [ ] `Cmd+Enter` saves a Pin composer or edit.
-- [ ] `Esc` discards a Pin composer or edit.
-- [ ] `j`, `k`, arrow keys, `e`, and `Shift+D` do not run Pin list commands.
+- [ ] `Cmd+Shift+I` focuses the new sticky note input.
+- [ ] `Cmd+Enter` saves a sticky note composer or edit.
+- [ ] `Esc` discards a sticky note composer or edit.
+- [ ] `j`, `k`, arrow keys, `e`, and `Shift+D` do not run sticky note list commands.
 
 ## App
 
@@ -37,4 +37,4 @@ Use this checklist before reviewing keyboard-related changes.
 - [ ] DailyNote editor shortcuts do not affect content behind an open dialog.
 - [ ] The app window itself does not scroll at small sizes.
 - [ ] Long DailyNote content scrolls inside the DailyNote section.
-- [ ] Many Pins scroll inside the Pins section.
+- [ ] Many Sticky Notes scroll inside the Sticky Notes section.

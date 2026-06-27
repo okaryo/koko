@@ -1,7 +1,7 @@
 export type PomodoroCommand = "toggle" | "reset";
 export type DailyNoteCommand = "focus" | "insertTimestamp" | "copyMarkdown";
 export type AppCommand = "toggleKeyboardHelp";
-export type PinCommand = "focusCreate";
+export type StickyNoteCommand = "focusCreate";
 
 export function pomodoroCommandFromKeydown(
   event: KeyboardEvent,
@@ -59,7 +59,9 @@ export function dailyNoteCommandFromKeydown(
   return null;
 }
 
-export function pinCommandFromKeydown(event: KeyboardEvent): PinCommand | null {
+export function stickyNoteCommandFromKeydown(
+  event: KeyboardEvent,
+): StickyNoteCommand | null {
   if (event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey) {
     return event.key.toLowerCase() === "i" ? "focusCreate" : null;
   }

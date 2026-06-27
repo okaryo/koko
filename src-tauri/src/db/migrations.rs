@@ -2,7 +2,10 @@ use rusqlite::Connection;
 
 const MIGRATIONS: &[(u32, &str)] = &[
     (1, include_str!("../../migrations/001_initial.sql")),
-    (2, include_str!("../../migrations/002_create_pins.sql")),
+    (
+        2,
+        include_str!("../../migrations/002_create_sticky_notes.sql"),
+    ),
 ];
 
 pub fn apply(connection: &mut Connection) -> Result<(), String> {
@@ -59,15 +62,15 @@ mod tests {
         let version: u32 = connection
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .expect("read schema version");
-        let (daily_notes_table_count, pins_table_count): (u32, u32) = connection
+        let (daily_notes_table_count, sticky_notes_table_count): (u32, u32) = connection
             .query_row(
                 "
                 SELECT
                     SUM(name = 'daily_notes'),
-                    SUM(name = 'pins')
+                    SUM(name = 'sticky_notes')
                 FROM sqlite_schema
                 WHERE type = 'table'
-                  AND name IN ('daily_notes', 'pins')
+                  AND name IN ('daily_notes', 'sticky_notes')
                 ",
                 [],
                 |row| Ok((row.get(0)?, row.get(1)?)),
@@ -76,7 +79,7 @@ mod tests {
 
         assert_eq!(version, 2);
         assert_eq!(daily_notes_table_count, 1);
-        assert_eq!(pins_table_count, 1);
+        assert_eq!(sticky_notes_table_count, 1);
     }
 
     #[test]

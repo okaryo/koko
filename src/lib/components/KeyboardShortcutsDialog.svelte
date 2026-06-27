@@ -36,11 +36,11 @@
       ],
     },
     {
-      title: "Pins",
+      title: "Sticky Notes",
       shortcuts: [
-        { action: "Focus new pin", keys: ["Cmd", "Shift", "I"] },
-        { action: "Save pin", keys: ["Cmd", "Enter"] },
-        { action: "Cancel pin editing", keys: ["Esc"] },
+        { action: "Focus new sticky note", keys: ["Cmd", "Shift", "I"] },
+        { action: "Save sticky note", keys: ["Cmd", "Enter"] },
+        { action: "Cancel sticky note editing", keys: ["Esc"] },
       ],
     },
     {

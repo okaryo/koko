@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   appCommandFromKeydown,
   dailyNoteCommandFromKeydown,
-  pinCommandFromKeydown,
   pomodoroCommandFromKeydown,
+  stickyNoteCommandFromKeydown,
 } from "./keyboard";
 
 type KeyOptions = Partial<KeyboardEvent> & {
@@ -56,17 +56,19 @@ describe("keyboard shortcuts", () => {
     ).toBeNull();
   });
 
-  it("maps Pin shortcuts", () => {
+  it("maps StickyNote shortcuts", () => {
     expect(
-      pinCommandFromKeydown(
+      stickyNoteCommandFromKeydown(
         keydown({ key: "i", metaKey: true, shiftKey: true }),
       ),
     ).toBe("focusCreate");
-    expect(pinCommandFromKeydown(keydown({ key: "j" }))).toBeNull();
-    expect(pinCommandFromKeydown(keydown({ key: "ArrowUp" }))).toBeNull();
-    expect(pinCommandFromKeydown(keydown({ key: "e" }))).toBeNull();
+    expect(stickyNoteCommandFromKeydown(keydown({ key: "j" }))).toBeNull();
     expect(
-      pinCommandFromKeydown(keydown({ key: "D", shiftKey: true })),
+      stickyNoteCommandFromKeydown(keydown({ key: "ArrowUp" })),
+    ).toBeNull();
+    expect(stickyNoteCommandFromKeydown(keydown({ key: "e" }))).toBeNull();
+    expect(
+      stickyNoteCommandFromKeydown(keydown({ key: "D", shiftKey: true })),
     ).toBeNull();
   });
 

@@ -7,8 +7,8 @@
   } from "$lib/api/dailyNotes";
   import DailyNotePanel from "$lib/components/DailyNotePanel.svelte";
   import KeyboardShortcutsDialog from "$lib/components/KeyboardShortcutsDialog.svelte";
-  import PinsPanel from "$lib/components/PinsPanel.svelte";
   import PomodoroPanel from "$lib/components/PomodoroPanel.svelte";
+  import StickyNotesPanel from "$lib/components/StickyNotesPanel.svelte";
   import { formatDateLabel, formatLocalDate } from "$lib/date";
   import { canStartTodayNote as canStartTodayNoteForDates } from "$lib/dailyNote/lifecycle";
   import { appCommandFromKeydown } from "$lib/keyboard";
@@ -184,7 +184,7 @@
 
     <aside class="side-panel" aria-label="Sidebar">
       <PomodoroPanel />
-      <PinsPanel />
+      <StickyNotesPanel />
     </aside>
   </div>
 </main>
