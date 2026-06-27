@@ -2,9 +2,11 @@
   import { onDestroy, onMount } from "svelte";
   import Check from "@lucide/svelte/icons/check";
   import CircleAlert from "@lucide/svelte/icons/circle-alert";
+  import Copy from "@lucide/svelte/icons/copy";
   import LoaderCircle from "@lucide/svelte/icons/loader-circle";
   import type { Editor } from "@tiptap/core";
   import { formatLocalTime } from "$lib/date";
+  import { markdownFromTiptapJson } from "$lib/editor/markdown";
   import { dailyNoteCommandFromKeydown, isEditableTarget } from "$lib/keyboard";
 
   type Props = {
@@ -28,6 +30,8 @@
   let editorElement = $state<HTMLDivElement>();
   let editor: Editor | null = null;
   let applyingExternalContent = false;
+  let copyStatus = $state<"idle" | "copied" | "error">("idle");
+  let copyStatusTimeout: ReturnType<typeof setTimeout> | null = null;
 
   onMount(async () => {
     if (!editorElement || editor) {
@@ -100,6 +104,7 @@
   });
 
   onDestroy(() => {
+    clearCopyStatusTimeout();
     editor?.destroy();
     editor = null;
   });
@@ -133,6 +138,41 @@
     const timestamp = formatLocalTime(new Date());
 
     editor?.chain().focus().insertContent(timestamp).run();
+  }
+
+  async function copyDailyNoteMarkdown() {
+    if (!editor) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(
+        markdownFromTiptapJson(editor.getJSON()),
+      );
+      showCopyStatus("copied");
+    } catch (error) {
+      console.warn("DailyNote copy failed", error);
+      showCopyStatus("error");
+    }
+  }
+
+  function showCopyStatus(status: "copied" | "error") {
+    clearCopyStatusTimeout();
+    copyStatus = status;
+
+    copyStatusTimeout = setTimeout(() => {
+      copyStatus = "idle";
+      copyStatusTimeout = null;
+    }, 2_000);
+  }
+
+  function clearCopyStatusTimeout() {
+    if (!copyStatusTimeout) {
+      return;
+    }
+
+    clearTimeout(copyStatusTimeout);
+    copyStatusTimeout = null;
   }
 
   function shouldIgnoreDailyNoteCommand(
@@ -192,6 +232,21 @@
           Save failed
         </span>
       {/if}
+      <button
+        class="icon-button"
+        type="button"
+        title={copyStatus === "copied" ? "Copied" : "Copy note"}
+        aria-label={copyStatus === "copied" ? "Copied" : "Copy note"}
+        onclick={() => void copyDailyNoteMarkdown()}
+      >
+        {#if copyStatus === "copied"}
+          <Check size={16} strokeWidth={2.2} aria-hidden="true" />
+        {:else if copyStatus === "error"}
+          <CircleAlert size={16} strokeWidth={2.2} aria-hidden="true" />
+        {:else}
+          <Copy size={16} strokeWidth={2.2} aria-hidden="true" />
+        {/if}
+      </button>
       {#if canStartTodayNote}
         <button type="button" onclick={() => void onStartTodayNote()}>
           Start today's note
@@ -244,6 +299,21 @@
   .note-header-actions button {
     flex: 0 1 auto;
     min-width: 0;
+  }
+
+  .note-header-actions .icon-button {
+    display: inline-flex;
+    width: 34px;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    color: #4c4f45;
+  }
+
+  .note-header-actions .icon-button:hover {
+    background: rgba(46, 51, 42, 0.08);
   }
 
   .save-status {

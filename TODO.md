@@ -219,7 +219,7 @@ Testing decisions:
 - [ ] Tune editor and timer contrast
 - [ ] Add clear empty state
 - [ ] Add calm error states
-- [ ] Add copy action for the current DailyNote content
+- [x] Add copy action for the current DailyNote content
 - [ ] Verify small desktop window behavior
 - [ ] Verify keyboard-only workflow manually
 
