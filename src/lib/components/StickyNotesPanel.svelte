@@ -278,12 +278,6 @@
             editingStickyNoteId !== stickyNote.id ? "sticky-note-display" : ""
           } ${stickyNote.pinnedAtMs !== null ? "sticky-note-pinned" : ""}`}
         >
-          {#if stickyNote.pinnedAtMs !== null}
-            <div class="sticky-note-pin-indicator" aria-hidden="true">
-              <PinIcon size={12} strokeWidth={2.4} />
-            </div>
-          {/if}
-
           {#if editingStickyNoteId === stickyNote.id}
             <textarea
               data-sticky-note-edit-id={stickyNote.id}
@@ -365,7 +359,7 @@
     padding: 0.9rem;
     border: 1px solid rgba(43, 41, 36, 0.12);
     border-radius: 8px;
-    background: rgba(255, 252, 246, 0.82);
+    background: #fffcf6;
     overflow: hidden;
   }
 
@@ -418,10 +412,9 @@
     gap: 8px;
     min-height: 82px;
     padding: 14px 36px 16px 14px;
-    border: 1px solid rgba(130, 107, 46, 0.18);
+    box-shadow: 0 4px 10px rgba(65, 52, 22, 0.08);
     border-radius: 6px;
-    background: #fff1a8;
-    box-shadow: 0 8px 18px rgba(65, 52, 22, 0.08);
+    background: #ffe37a;
     cursor: text;
     overflow: hidden;
   }
@@ -432,23 +425,6 @@
 
   .sticky-note-pinned {
     border-color: rgba(89, 113, 62, 0.34);
-  }
-
-  .sticky-note-pin-indicator {
-    position: absolute;
-    z-index: 1;
-    top: 8px;
-    right: 8px;
-    display: inline-flex;
-    width: 24px;
-    height: 24px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: rgba(89, 113, 62, 0.14);
-    color: #2f3f24;
-    pointer-events: none;
-    transition: opacity 120ms ease;
   }
 
   .sticky-note-edit-button {
@@ -475,28 +451,37 @@
     color: inherit;
   }
 
-  .sticky-note::before {
+  .sticky-note-pinned::before {
     position: absolute;
     right: 0;
-    bottom: 0;
-    width: 26px;
-    height: 26px;
-    background: transparent;
+    top: 0;
+    z-index: 2;
+    width: 16px;
+    height: 16px;
+    border-radius: 0 0 0 4px;
+    background: linear-gradient(
+      45deg,
+      #c99f24,
+      #c99f24 50%,
+      #fffcf6 50%,
+      #fffcf6
+    );
     content: "";
     pointer-events: none;
   }
 
-  .sticky-note::after {
+  .sticky-note-pinned::after {
     position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 22px;
-    height: 22px;
-    border-top-left-radius: 2px;
-    background: #d8b73d;
-    clip-path: polygon(100% 0, 0 100%, 100% 100%);
+    top: -4px;
+    right: -10px;
+    z-index: 3;
+    width: 34px;
+    height: 14px;
+    border-top-left-radius: 0;
+    background: transparent;
     content: "";
     pointer-events: none;
+    transform: rotate(45deg);
   }
 
   .sticky-note-composer {
@@ -516,8 +501,8 @@
     width: 28px;
     min-width: 28px;
     height: 28px;
-    background: rgba(255, 251, 231, 0.56);
-    cursor: default;
+    background: rgba(255, 246, 188, 0.72);
+    cursor: pointer;
   }
 
   .sticky-note-action-button-active,
@@ -533,6 +518,7 @@
     background: transparent;
     color: #4a4438;
     line-height: 1.45;
+    font-size: 0.9rem;
   }
 
   .sticky-note textarea:focus-visible {
@@ -541,7 +527,7 @@
 
   .sticky-note-actions {
     position: absolute;
-    z-index: 1;
+    z-index: 4;
     top: 8px;
     right: 8px;
     display: flex;
@@ -553,10 +539,5 @@
   .sticky-note:hover .sticky-note-actions,
   .sticky-note:focus-within .sticky-note-actions {
     opacity: 1;
-  }
-
-  .sticky-note:hover .sticky-note-pin-indicator,
-  .sticky-note:focus-within .sticky-note-pin-indicator {
-    opacity: 0;
   }
 </style>

@@ -403,7 +403,7 @@
     padding: 0.9rem;
     border: 1px solid rgba(43, 41, 36, 0.12);
     border-radius: 8px;
-    background: rgba(255, 252, 246, 0.82);
+    background: #fffcf6;
   }
 
   .panel-header {
