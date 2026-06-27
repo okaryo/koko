@@ -84,8 +84,7 @@
         }),
         MarkdownTaskInput,
         Placeholder.configure({
-          placeholder:
-            "Write tasks, logs, decisions, links, and return points...",
+          placeholder: "Start writing...",
         }),
       ],
       editorProps: {

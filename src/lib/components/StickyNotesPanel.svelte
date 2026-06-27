@@ -259,7 +259,7 @@
         use:disableAutocorrect
         autocapitalize="off"
         autocomplete="off"
-        placeholder="Add a monthly goal, reminder, or idea..."
+        placeholder="Add a note..."
         spellcheck="false"
         aria-label="New sticky note"
         onkeydown={handleComposerKeydown}
@@ -268,8 +268,8 @@
   {/if}
 
   <div class="sticky-note-list" aria-label="Active sticky notes">
-    {#if stickyNotes.length === 0}
-      <p class="empty-state">No sticky notes yet.</p>
+    {#if stickyNotes.length === 0 && !composerOpen}
+      <p class="empty-state">No notes.</p>
     {:else}
       {#each stickyNotes as stickyNote (stickyNote.id)}
         <div
@@ -523,6 +523,11 @@
 
   .sticky-note textarea:focus-visible {
     outline: none;
+  }
+
+  .sticky-note textarea::placeholder {
+    color: #6b614f;
+    opacity: 1;
   }
 
   .sticky-note-actions {
