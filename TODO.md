@@ -215,7 +215,7 @@ Testing decisions:
 ## Phase 8 - UI Polish
 
 - [ ] Design main app layout
-- [ ] Tune typography for long writing sessions
+- [x] Tune typography for long writing sessions
 - [ ] Tune editor and timer contrast
 - [ ] Add clear empty state
 - [ ] Add calm error states

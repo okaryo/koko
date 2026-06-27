@@ -377,18 +377,18 @@
   :global(.daily-note-editor) {
     width: 100%;
     min-height: 100%;
-    padding: 20px;
+    padding: 22px;
     outline: none;
     color: #20211f;
     font-family:
       "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
-    font-size: 0.95rem;
-    line-height: 1.55;
+    font-size: 0.96rem;
+    line-height: 1.62;
     white-space: pre-wrap;
   }
 
   :global(.daily-note-editor p) {
-    margin: 0 0 0.7rem;
+    margin: 0 0 0.76rem;
   }
 
   :global(.daily-note-editor h1),
@@ -397,8 +397,28 @@
   :global(.daily-note-editor h4),
   :global(.daily-note-editor h5),
   :global(.daily-note-editor h6) {
-    margin: 1rem 0 0.55rem;
+    margin: 1.12rem 0 0.56rem;
+    color: #24261f;
+    font-weight: 760;
     line-height: 1.25;
+  }
+
+  :global(.daily-note-editor h1) {
+    font-size: 1.42rem;
+  }
+
+  :global(.daily-note-editor h2) {
+    font-size: 1.24rem;
+  }
+
+  :global(.daily-note-editor h3) {
+    font-size: 1.08rem;
+  }
+
+  :global(.daily-note-editor h4),
+  :global(.daily-note-editor h5),
+  :global(.daily-note-editor h6) {
+    font-size: 1rem;
   }
 
   :global(.daily-note-editor h1:first-child),
@@ -412,12 +432,48 @@
 
   :global(.daily-note-editor ul),
   :global(.daily-note-editor ol) {
-    margin: 0 0 0.7rem;
+    margin: 0 0 0.76rem;
     padding-left: 1.4rem;
   }
 
   :global(.daily-note-editor li) {
     margin: 0.18rem 0;
+  }
+
+  :global(.daily-note-editor blockquote) {
+    margin: 0 0 0.76rem;
+    padding-left: 0.9rem;
+    border-left: 3px solid rgba(99, 122, 69, 0.38);
+    color: #5b554a;
+  }
+
+  :global(.daily-note-editor code) {
+    padding: 0.05rem 0.25rem;
+    border-radius: 4px;
+    background: rgba(43, 41, 36, 0.07);
+    color: #2f332b;
+    font-family:
+      "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
+    font-size: 0.92em;
+  }
+
+  :global(.daily-note-editor pre) {
+    margin: 0 0 0.8rem;
+    padding: 0.8rem;
+    border-radius: 6px;
+    background: #f1eee6;
+    overflow: auto;
+  }
+
+  :global(.daily-note-editor pre code) {
+    padding: 0;
+    background: transparent;
+  }
+
+  :global(.daily-note-editor a) {
+    color: #466b88;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
   }
 
   :global(.daily-note-editor ul[data-type="taskList"]) {
