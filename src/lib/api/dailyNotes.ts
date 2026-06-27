@@ -8,10 +8,27 @@ export type DailyNote = {
   updatedAtMs: number;
 };
 
+export type DailyNoteNavigation = {
+  previousNoteDate: string | null;
+  nextNoteDate: string | null;
+};
+
 export function getOrCreateDailyNote(noteDate: string, nowMs: number) {
   return invoke<DailyNote>("get_or_create_daily_note", {
     noteDate,
     nowMs,
+  });
+}
+
+export function getDailyNote(noteDate: string) {
+  return invoke<DailyNote | null>("get_daily_note", {
+    noteDate,
+  });
+}
+
+export function getDailyNoteNavigation(noteDate: string) {
+  return invoke<DailyNoteNavigation>("get_daily_note_navigation", {
+    noteDate,
   });
 }
 

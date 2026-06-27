@@ -1,4 +1,4 @@
-use super::model::DailyNote;
+use super::model::{DailyNote, DailyNoteNavigation};
 use super::repository;
 use crate::db;
 use tauri::{AppHandle, Emitter};
@@ -12,6 +12,23 @@ pub fn get_or_create_daily_note(
     let connection = db::open(&app)?;
 
     repository::get_or_create(&connection, &note_date, now_ms)
+}
+
+#[tauri::command]
+pub fn get_daily_note(app: AppHandle, note_date: String) -> Result<Option<DailyNote>, String> {
+    let connection = db::open(&app)?;
+
+    repository::get(&connection, &note_date)
+}
+
+#[tauri::command]
+pub fn get_daily_note_navigation(
+    app: AppHandle,
+    note_date: String,
+) -> Result<DailyNoteNavigation, String> {
+    let connection = db::open(&app)?;
+
+    repository::navigation(&connection, &note_date)
 }
 
 #[tauri::command]

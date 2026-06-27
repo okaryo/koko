@@ -1,16 +1,18 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import {
+    getDailyNote,
+    getDailyNoteNavigation,
     getOrCreateDailyNote,
     updateDailyNoteBody,
     type DailyNote,
+    type DailyNoteNavigation,
   } from "$lib/api/dailyNotes";
   import DailyNotePanel from "$lib/components/DailyNotePanel.svelte";
   import KeyboardShortcutsDialog from "$lib/components/KeyboardShortcutsDialog.svelte";
   import PomodoroPanel from "$lib/components/PomodoroPanel.svelte";
   import StickyNotesPanel from "$lib/components/StickyNotesPanel.svelte";
   import { formatDateLabel, formatLocalDate } from "$lib/date";
-  import { canStartTodayNote as canStartTodayNoteForDates } from "$lib/dailyNote/lifecycle";
   import { appCommandFromKeydown } from "$lib/keyboard";
 
   type DailyNoteSaveStatus = "idle" | "saving" | "saved" | "error";
@@ -20,21 +22,25 @@
   let activeNoteDate = $state(formatLocalDate(new Date()));
   let currentDate = $state(formatLocalDate(new Date()));
   let dailyNoteSaveStatus = $state<DailyNoteSaveStatus>("idle");
+  let dailyNoteNavigation = $state<DailyNoteNavigation>({
+    previousNoteDate: null,
+    nextNoteDate: null,
+  });
+  let todayDailyNoteExists = $state(true);
   let keyboardShortcutsOpen = $state(false);
   let dateCheckInterval: ReturnType<typeof setInterval> | null = null;
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let dailyNoteSavedStatusTimeout: ReturnType<typeof setTimeout> | null = null;
   const activeNoteDateLabel = $derived(formatDateLabel(activeNoteDate));
-  const canStartTodayNote = $derived(
-    canStartTodayNoteForDates(activeNoteDate, currentDate),
-  );
 
   onMount(async () => {
     activeDailyNote = await loadDailyNote(activeNoteDate);
     dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
     dailyNoteSaveStatus = activeDailyNote ? "idle" : "error";
+    await refreshDailyNoteNavigation();
+    await refreshTodayDailyNoteExists();
     dateCheckInterval = setInterval(() => {
-      currentDate = formatLocalDate(new Date());
+      void refreshCurrentDate();
     }, 60_000);
   });
 
@@ -49,20 +55,42 @@
     scheduleDailyNoteSave(bodyHtml);
   }
 
-  async function startTodayNote() {
-    const todayDate = formatLocalDate(new Date());
-
-    if (todayDate <= activeNoteDate) {
+  async function goToExistingTodayNote() {
+    if (currentDate === activeNoteDate || !todayDailyNoteExists) {
       return;
     }
 
     await saveCurrentDailyNoteImmediately();
 
-    activeNoteDate = todayDate;
-    currentDate = todayDate;
-    activeDailyNote = await loadDailyNote(activeNoteDate);
-    dailyNoteHtml = activeDailyNote?.bodyHtml ?? "";
-    dailyNoteSaveStatus = activeDailyNote ? "idle" : "error";
+    const todayDailyNote = await loadExistingDailyNote(currentDate);
+
+    if (!todayDailyNote) {
+      todayDailyNoteExists = false;
+      return;
+    }
+
+    setActiveDailyNote(todayDailyNote);
+    await refreshDailyNoteNavigation();
+    await refreshTodayDailyNoteExists();
+  }
+
+  async function startTodayNote() {
+    if (currentDate === activeNoteDate) {
+      return;
+    }
+
+    await saveCurrentDailyNoteImmediately();
+
+    const todayDailyNote = await loadDailyNote(currentDate);
+
+    if (!todayDailyNote) {
+      dailyNoteSaveStatus = "error";
+      return;
+    }
+
+    todayDailyNoteExists = true;
+    setActiveDailyNote(todayDailyNote);
+    await refreshDailyNoteNavigation();
   }
 
   async function loadDailyNote(noteDate: string) {
@@ -72,6 +100,72 @@
       console.warn("DailyNote load failed", error);
       return null;
     }
+  }
+
+  async function loadExistingDailyNote(noteDate: string) {
+    try {
+      return await getDailyNote(noteDate);
+    } catch (error) {
+      console.warn("DailyNote load failed", error);
+      return null;
+    }
+  }
+
+  async function refreshDailyNoteNavigation() {
+    try {
+      dailyNoteNavigation = await getDailyNoteNavigation(activeNoteDate);
+    } catch (error) {
+      console.warn("DailyNote navigation load failed", error);
+      dailyNoteNavigation = {
+        previousNoteDate: null,
+        nextNoteDate: null,
+      };
+    }
+  }
+
+  async function refreshTodayDailyNoteExists() {
+    if (activeNoteDate === currentDate) {
+      todayDailyNoteExists = true;
+      return;
+    }
+
+    todayDailyNoteExists = (await loadExistingDailyNote(currentDate)) !== null;
+  }
+
+  async function refreshCurrentDate() {
+    const nextCurrentDate = formatLocalDate(new Date());
+
+    if (nextCurrentDate !== currentDate) {
+      currentDate = nextCurrentDate;
+    }
+
+    await refreshTodayDailyNoteExists();
+  }
+
+  async function goToAdjacentDailyNote(noteDate: string | null) {
+    if (!noteDate || noteDate === activeNoteDate) {
+      return;
+    }
+
+    await saveCurrentDailyNoteImmediately();
+
+    const dailyNote = await loadExistingDailyNote(noteDate);
+
+    if (!dailyNote) {
+      await refreshDailyNoteNavigation();
+      return;
+    }
+
+    setActiveDailyNote(dailyNote);
+    await refreshDailyNoteNavigation();
+    await refreshTodayDailyNoteExists();
+  }
+
+  function setActiveDailyNote(dailyNote: DailyNote) {
+    activeDailyNote = dailyNote;
+    activeNoteDate = dailyNote.noteDate;
+    dailyNoteHtml = dailyNote.bodyHtml;
+    dailyNoteSaveStatus = "idle";
   }
 
   function scheduleDailyNoteSave(bodyHtml: string) {
@@ -175,10 +269,18 @@
   <div class="workspace">
     <DailyNotePanel
       bodyHtml={dailyNoteHtml}
-      {canStartTodayNote}
       dateLabel={activeNoteDateLabel}
+      isToday={activeNoteDate === currentDate}
+      nextNoteDate={dailyNoteNavigation.nextNoteDate}
+      previousNoteDate={dailyNoteNavigation.previousNoteDate}
       saveStatus={dailyNoteSaveStatus}
+      {todayDailyNoteExists}
       onBodyChange={handleDailyNoteBodyChange}
+      onGoToNextNote={() =>
+        void goToAdjacentDailyNote(dailyNoteNavigation.nextNoteDate)}
+      onGoToPreviousNote={() =>
+        void goToAdjacentDailyNote(dailyNoteNavigation.previousNoteDate)}
+      onGoToTodayNote={goToExistingTodayNote}
       onStartTodayNote={startTodayNote}
     />
 

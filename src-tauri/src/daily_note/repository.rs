@@ -1,5 +1,5 @@
-use super::model::DailyNote;
-use rusqlite::{params, Connection};
+use super::model::{DailyNote, DailyNoteNavigation};
+use rusqlite::{params, Connection, OptionalExtension};
 
 pub fn get_or_create(
     connection: &Connection,
@@ -22,6 +22,46 @@ pub fn get_or_create(
 
     find_by_date(connection, note_date)?
         .ok_or_else(|| "Failed to load created DailyNote.".to_string())
+}
+
+pub fn get(connection: &Connection, note_date: &str) -> Result<Option<DailyNote>, String> {
+    find_by_date(connection, note_date)
+}
+
+pub fn navigation(connection: &Connection, note_date: &str) -> Result<DailyNoteNavigation, String> {
+    let previous_note_date = connection
+        .query_row(
+            "
+            SELECT note_date
+            FROM daily_notes
+            WHERE note_date < ?1
+            ORDER BY note_date DESC
+            LIMIT 1
+            ",
+            params![note_date],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(|error| format!("Failed to query previous DailyNote: {error}"))?;
+    let next_note_date = connection
+        .query_row(
+            "
+            SELECT note_date
+            FROM daily_notes
+            WHERE note_date > ?1
+            ORDER BY note_date ASC
+            LIMIT 1
+            ",
+            params![note_date],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(|error| format!("Failed to query next DailyNote: {error}"))?;
+
+    Ok(DailyNoteNavigation {
+        previous_note_date,
+        next_note_date,
+    })
 }
 
 pub fn update_body(
@@ -168,5 +208,32 @@ mod tests {
 
         assert_eq!(updated.body_html, "<p>Updated</p>");
         assert_eq!(updated.updated_at_ms, 2000);
+    }
+
+    #[test]
+    fn gets_daily_note_navigation() {
+        let connection = migrated_connection();
+        get_or_create(&connection, "2026-06-25", 1000).expect("create older");
+        get_or_create(&connection, "2026-06-27", 2000).expect("create active");
+        get_or_create(&connection, "2026-06-29", 3000).expect("create newer");
+
+        let navigation = navigation(&connection, "2026-06-27").expect("get navigation");
+
+        assert_eq!(
+            navigation.previous_note_date,
+            Some("2026-06-25".to_string())
+        );
+        assert_eq!(navigation.next_note_date, Some("2026-06-29".to_string()));
+    }
+
+    #[test]
+    fn gets_no_navigation_when_adjacent_daily_notes_do_not_exist() {
+        let connection = migrated_connection();
+        get_or_create(&connection, "2026-06-27", 1000).expect("create active");
+
+        let navigation = navigation(&connection, "2026-06-27").expect("get navigation");
+
+        assert_eq!(navigation.previous_note_date, None);
+        assert_eq!(navigation.next_note_date, None);
     }
 }

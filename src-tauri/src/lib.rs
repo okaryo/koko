@@ -15,6 +15,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             daily_note::commands::get_or_create_daily_note,
+            daily_note::commands::get_daily_note,
+            daily_note::commands::get_daily_note_navigation,
             daily_note::commands::update_daily_note_body,
             sticky_note::commands::list_sticky_notes,
             sticky_note::commands::create_sticky_note,

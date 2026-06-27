@@ -71,7 +71,9 @@ Setup decisions:
 - [x] Create main Tiptap editor UI
 - [x] Persist the active DailyNote locally
 - [x] Load the active DailyNote on launch
-- [x] Add explicit "Start today's note" action
+- [x] Add explicit Today action
+- [x] Add previous and next DailyNote navigation
+- [x] Add quick return to today's DailyNote
 - [x] Add unsaved/error state handling if needed
 - [x] Add keyboard-first editor focus behavior
 - [x] Add list continuation behavior
@@ -85,8 +87,11 @@ Daily workspace decisions:
 - Tiptap is the editor foundation.
 - DailyNote content should remain portable as Markdown-like content.
 - Avoid hidden metadata inside the document unless it is necessary and discussed.
-- `Start today's note` appears only when the current local date is later than the active DailyNote date.
-- Starting today's note saves the current DailyNote first, then loads or creates today's DailyNote.
+- Previous and next navigation moves between existing DailyNotes.
+- Previous and next navigation buttons are disabled when no adjacent DailyNote exists.
+- `Today` appears when today's DailyNote exists and moves to it after saving the current DailyNote.
+- `Today` is disabled while today's DailyNote is active.
+- `Start today's note` appears when today's DailyNote does not exist and creates it after saving the current DailyNote.
 - `Cmd+Shift+N`: focus the DailyNote editor.
 - `Ctrl+T`: insert `HH:mm` at the current DailyNote cursor position.
 - Tiptap handles normal list continuation for `- ` and `1. ` input.

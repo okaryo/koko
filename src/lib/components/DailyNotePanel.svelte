@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
+  import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import Check from "@lucide/svelte/icons/check";
+  import ChevronLeft from "@lucide/svelte/icons/chevron-left";
+  import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import CircleAlert from "@lucide/svelte/icons/circle-alert";
   import Copy from "@lucide/svelte/icons/copy";
   import LoaderCircle from "@lucide/svelte/icons/loader-circle";
@@ -11,19 +14,31 @@
 
   type Props = {
     bodyHtml: string;
-    canStartTodayNote: boolean;
     dateLabel: string;
+    isToday: boolean;
+    nextNoteDate: string | null;
+    previousNoteDate: string | null;
     saveStatus: "idle" | "saving" | "saved" | "error";
+    todayDailyNoteExists: boolean;
     onBodyChange: (bodyHtml: string) => void;
+    onGoToNextNote: () => void | Promise<void>;
+    onGoToPreviousNote: () => void | Promise<void>;
+    onGoToTodayNote: () => void | Promise<void>;
     onStartTodayNote: () => void | Promise<void>;
   };
 
   let {
     bodyHtml,
-    canStartTodayNote,
     dateLabel,
+    isToday,
+    nextNoteDate,
+    previousNoteDate,
     saveStatus,
+    todayDailyNoteExists,
     onBodyChange,
+    onGoToNextNote,
+    onGoToPreviousNote,
+    onGoToTodayNote,
     onStartTodayNote,
   }: Props = $props();
 
@@ -217,7 +232,56 @@
 
 <section class="note-panel" aria-label="DailyNote editor">
   <header class="panel-header note-header">
-    <h1>{dateLabel}</h1>
+    <div class="note-title-group">
+      <h1>{dateLabel}</h1>
+      <div class="note-navigation" aria-label="DailyNote navigation">
+        <button
+          class="icon-button"
+          type="button"
+          title="Previous note"
+          aria-label="Previous note"
+          disabled={!previousNoteDate}
+          onclick={() => void onGoToPreviousNote()}
+        >
+          <ChevronLeft size={16} strokeWidth={2.2} aria-hidden="true" />
+        </button>
+        {#if todayDailyNoteExists}
+          <button
+            class="today-button"
+            type="button"
+            title="Go to today"
+            aria-label="Go to today"
+            disabled={isToday}
+            onclick={() => void onGoToTodayNote()}
+          >
+            <CalendarDays size={14} strokeWidth={2.2} aria-hidden="true" />
+            Today
+          </button>
+        {:else}
+          <button
+            class="today-button start-today-button"
+            type="button"
+            title="Start today's note"
+            aria-label="Start today's note"
+            disabled={isToday}
+            onclick={() => void onStartTodayNote()}
+          >
+            <CalendarDays size={14} strokeWidth={2.2} aria-hidden="true" />
+            Start today's note
+          </button>
+        {/if}
+        <button
+          class="icon-button"
+          type="button"
+          title="Next note"
+          aria-label="Next note"
+          disabled={!nextNoteDate}
+          onclick={() => void onGoToNextNote()}
+        >
+          <ChevronRight size={16} strokeWidth={2.2} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
     <div class="note-header-actions">
       {#if saveStatus === "saving"}
         <span
@@ -252,11 +316,6 @@
           <Copy size={16} strokeWidth={2.2} aria-hidden="true" />
         {/if}
       </button>
-      {#if canStartTodayNote}
-        <button type="button" onclick={() => void onStartTodayNote()}>
-          Start today's note
-        </button>
-      {/if}
     </div>
   </header>
 
@@ -287,11 +346,24 @@
     min-height: 2.2rem;
   }
 
+  .note-title-group {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+  }
+
   h1 {
     margin: 0;
     font-size: 1.35rem;
     font-weight: 720;
     line-height: 1.1;
+  }
+
+  .note-navigation {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .note-header-actions {
@@ -319,6 +391,64 @@
 
   .note-header-actions .icon-button:hover {
     background: rgba(46, 51, 42, 0.08);
+  }
+
+  .note-navigation .icon-button,
+  .today-button {
+    height: 30px;
+    min-height: 30px;
+    border-color: transparent;
+    background: transparent;
+    color: #5a5449;
+  }
+
+  .note-navigation .icon-button {
+    width: 30px;
+    min-width: 30px;
+    padding: 0;
+  }
+
+  .today-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 8px;
+    font-size: 0.82rem;
+    font-weight: 680;
+    transition:
+      background 120ms ease,
+      color 120ms ease;
+  }
+
+  .start-today-button {
+    border-color: #2e332a;
+    background: #2e332a;
+    color: #fffdf8;
+    padding: 0 10px;
+  }
+
+  .start-today-button:hover {
+    background: #22271f;
+    color: #fffdf8;
+  }
+
+  .start-today-button:disabled {
+    border-color: transparent;
+    background: rgba(46, 51, 42, 0.12);
+    color: rgba(46, 51, 42, 0.42);
+  }
+
+  .note-navigation .icon-button:hover,
+  .today-button:not(.start-today-button):hover {
+    background: rgba(46, 51, 42, 0.08);
+    color: #20211f;
+  }
+
+  .note-navigation .icon-button:disabled,
+  .today-button:disabled {
+    background: transparent;
+    color: rgba(74, 68, 56, 0.28);
+    cursor: default;
   }
 
   .save-status {
