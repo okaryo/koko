@@ -5,6 +5,7 @@ export type AppSettings = {
 };
 
 export type PomodoroSettings = {
+  focusDurationMinutes: number;
   focusVolume: number;
   completionVolume: number;
 };
@@ -20,5 +21,11 @@ export function updatePomodoroVolumeSettings(
   return invoke<AppSettings>("update_pomodoro_volume_settings", {
     focusVolume,
     completionVolume,
+  });
+}
+
+export function updatePomodoroTimerSettings(focusDurationMinutes: number) {
+  return invoke<AppSettings>("update_pomodoro_timer_settings", {
+    focusDurationMinutes,
   });
 }

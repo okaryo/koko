@@ -85,6 +85,7 @@ mod tests {
         let path = temporary_settings_path("save");
         let settings = AppSettings {
             pomodoro: super::super::model::PomodoroSettings {
+                focus_duration_minutes: 45,
                 focus_volume: 12,
                 completion_volume: 34,
             },

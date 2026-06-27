@@ -21,6 +21,7 @@ pub fn run() {
             pin::commands::update_pin_body,
             pin::commands::archive_pin,
             settings::commands::get_settings,
+            settings::commands::update_pomodoro_timer_settings,
             settings::commands::update_pomodoro_volume_settings,
         ])
         .run(tauri::generate_context!())

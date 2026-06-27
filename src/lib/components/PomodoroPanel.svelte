@@ -4,7 +4,11 @@
   import Pause from "@lucide/svelte/icons/pause";
   import Play from "@lucide/svelte/icons/play";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
-  import { getSettings, updatePomodoroVolumeSettings } from "$lib/api/settings";
+  import {
+    getSettings,
+    updatePomodoroTimerSettings,
+    updatePomodoroVolumeSettings,
+  } from "$lib/api/settings";
   import SlidersHorizontal from "@lucide/svelte/icons/sliders-horizontal";
   import { createKokoAudio, createKokoAudioSequence } from "$lib/audio/player";
   import {
@@ -23,21 +27,27 @@
     pomodoroPrimaryActionLabel,
     pomodoroStatus,
     resetPomodoro,
+    setPomodoroDuration,
     tickPomodoro,
     togglePomodoro,
     type PomodoroState,
   } from "$lib/pomodoro/timer";
 
-  const DEFAULT_FOCUS_VOLUME_PERCENT = 28;
-  const DEFAULT_COMPLETION_VOLUME_PERCENT = 60;
+  const DEFAULT_FOCUS_DURATION_MINUTES = 25;
+  const MIN_FOCUS_DURATION_MINUTES = 1;
+  const MAX_FOCUS_DURATION_MINUTES = 60;
+  const DEFAULT_FOCUS_VOLUME_PERCENT = 100;
+  const DEFAULT_COMPLETION_VOLUME_PERCENT = 100;
 
   let pomodoroState = $state<PomodoroState>(initialPomodoroState());
   let notificationPermissionLoaded = $state(false);
   let notificationPermissionGranted = $state(false);
   let soundSettingsOpen = $state(false);
+  let focusDurationMinutes = $state(DEFAULT_FOCUS_DURATION_MINUTES);
   let focusVolumePercent = $state(DEFAULT_FOCUS_VOLUME_PERCENT);
   let completionVolumePercent = $state(DEFAULT_COMPLETION_VOLUME_PERCENT);
   let timerInterval: ReturnType<typeof setInterval> | null = null;
+  let durationSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let volumeSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let settingsLoaded = false;
   const focusLoopAudio = createKokoAudioSequence({
@@ -63,9 +73,20 @@
 
   onDestroy(() => {
     stopTimer();
+    clearDurationSaveTimeout();
     clearVolumeSaveTimeout();
     focusLoopAudio.dispose();
     completionAudio.dispose();
+  });
+
+  $effect(() => {
+    const durationSeconds = durationMinutesToSeconds(focusDurationMinutes);
+
+    pomodoroState = setPomodoroDuration(pomodoroState, durationSeconds);
+
+    if (settingsLoaded) {
+      scheduleDurationSave();
+    }
   });
 
   $effect(() => {
@@ -164,6 +185,7 @@
     try {
       const settings = await getSettings();
 
+      focusDurationMinutes = settings.pomodoro.focusDurationMinutes;
       focusVolumePercent = settings.pomodoro.focusVolume;
       completionVolumePercent = settings.pomodoro.completionVolume;
     } catch (error) {
@@ -181,6 +203,24 @@
     }, 500);
   }
 
+  function scheduleDurationSave() {
+    clearDurationSaveTimeout();
+
+    durationSaveTimeout = setTimeout(() => {
+      void saveDurationSettings();
+    }, 500);
+  }
+
+  async function saveDurationSettings() {
+    try {
+      const settings = await updatePomodoroTimerSettings(focusDurationMinutes);
+
+      focusDurationMinutes = settings.pomodoro.focusDurationMinutes;
+    } catch (error) {
+      console.warn("Settings save failed", error);
+    }
+  }
+
   async function saveVolumeSettings() {
     try {
       const settings = await updatePomodoroVolumeSettings(
@@ -195,6 +235,15 @@
     }
   }
 
+  function clearDurationSaveTimeout() {
+    if (!durationSaveTimeout) {
+      return;
+    }
+
+    clearTimeout(durationSaveTimeout);
+    durationSaveTimeout = null;
+  }
+
   function clearVolumeSaveTimeout() {
     if (!volumeSaveTimeout) {
       return;
@@ -206,6 +255,32 @@
 
   function volumePercentToAudioVolume(volumePercent: number) {
     return Math.min(100, Math.max(0, volumePercent)) / 100;
+  }
+
+  function handleFocusDurationInput(event: Event) {
+    if (!(event.target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const nextDurationMinutes = clampFocusDuration(Number(event.target.value));
+
+    focusDurationMinutes = nextDurationMinutes;
+    event.target.value = `${nextDurationMinutes}`;
+  }
+
+  function durationMinutesToSeconds(minutes: number) {
+    return minutes * 60;
+  }
+
+  function clampFocusDuration(minutes: number) {
+    if (!Number.isFinite(minutes)) {
+      return DEFAULT_FOCUS_DURATION_MINUTES;
+    }
+
+    return Math.min(
+      MAX_FOCUS_DURATION_MINUTES,
+      Math.max(MIN_FOCUS_DURATION_MINUTES, Math.round(minutes)),
+    );
   }
 </script>
 
@@ -230,8 +305,8 @@
         class="icon-button subtle-icon-button"
         class:active-icon-button={soundSettingsOpen}
         type="button"
-        aria-label="Sound settings"
-        title="Sound settings"
+        aria-label="Pomodoro settings"
+        title="Pomodoro settings"
         aria-pressed={soundSettingsOpen}
         onclick={() => {
           soundSettingsOpen = !soundSettingsOpen;
@@ -275,7 +350,20 @@
   </div>
 
   {#if soundSettingsOpen}
-    <div class="sound-settings" aria-label="Pomodoro sound settings">
+    <div class="pomodoro-settings" aria-label="Pomodoro settings">
+      <label>
+        <span>Duration</span>
+        <input
+          type="number"
+          min={MIN_FOCUS_DURATION_MINUTES}
+          max={MAX_FOCUS_DURATION_MINUTES}
+          step="1"
+          value={focusDurationMinutes}
+          aria-label="Focus duration in minutes"
+          oninput={handleFocusDurationInput}
+        />
+        <output>min</output>
+      </label>
       <label>
         <span>Focus</span>
         <input
@@ -408,7 +496,7 @@
     color: #20211f;
   }
 
-  .sound-settings {
+  .pomodoro-settings {
     display: flex;
     min-width: 0;
     flex-direction: column;
@@ -419,7 +507,7 @@
     background: #fffdf8;
   }
 
-  .sound-settings label {
+  .pomodoro-settings label {
     display: grid;
     grid-template-columns: minmax(3.8rem, 4.4rem) minmax(0, 1fr) 2rem;
     align-items: center;
@@ -428,11 +516,22 @@
     font-size: 0.8rem;
   }
 
-  .sound-settings input {
+  .pomodoro-settings input {
     width: 100%;
   }
 
-  .sound-settings output {
+  .pomodoro-settings input[type="number"] {
+    min-width: 0;
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid rgba(43, 41, 36, 0.12);
+    border-radius: 6px;
+    background: #fffdf8;
+    color: #20211f;
+    font: inherit;
+  }
+
+  .pomodoro-settings output {
     color: #6d675d;
     font-variant-numeric: tabular-nums;
     text-align: right;

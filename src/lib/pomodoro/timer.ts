@@ -45,6 +45,17 @@ export function resetPomodoro(
   return initialPomodoroState(durationSeconds);
 }
 
+export function setPomodoroDuration(
+  state: PomodoroState,
+  durationSeconds: number,
+): PomodoroState {
+  if (state.running || state.durationSeconds === durationSeconds) {
+    return state;
+  }
+
+  return initialPomodoroState(durationSeconds);
+}
+
 export function tickPomodoro(state: PomodoroState): PomodoroTickResult {
   if (!state.running) {
     return { state, completed: false };

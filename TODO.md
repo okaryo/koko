@@ -132,7 +132,9 @@ Pin decisions:
 - [x] Add keyboard shortcuts
 - [x] Add completion notification
 - [x] Add focus and completion sounds
+- [x] Add Pomodoro duration settings
 - [x] Add Pomodoro sound volume settings
+- [x] Persist Pomodoro duration settings
 - [x] Persist Pomodoro sound volume settings
 
 Pomodoro decisions:
@@ -143,8 +145,11 @@ Pomodoro decisions:
 - Session counts and analytics are not planned for the core app.
 - Pomodoro completion sends a notification when notification permission has been granted.
 - Pomodoro plays a quiet focus tick/tock loop while running and a completion sound when the timer completes.
+- Pomodoro focus duration can be adjusted from 1 to 60 minutes.
+- Pomodoro focus duration changes are applied to idle timers, not to an already running timer.
 - Pomodoro focus and completion sound volume can be adjusted from the timer panel.
 - Pomodoro focus and completion sound volume settings are persisted locally in `settings.json`.
+- Pomodoro focus duration is persisted locally in `settings.json`.
 
 ---
 

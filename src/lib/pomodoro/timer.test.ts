@@ -5,6 +5,7 @@ import {
   pomodoroPrimaryActionLabel,
   pomodoroStatus,
   resetPomodoro,
+  setPomodoroDuration,
   tickPomodoro,
   togglePomodoro,
 } from "./timer";
@@ -36,6 +37,20 @@ describe("pomodoro timer", () => {
       durationSeconds: 600,
       running: false,
     });
+  });
+
+  it("updates idle timers to a new duration", () => {
+    expect(setPomodoroDuration(initialPomodoroState(1500), 600)).toEqual({
+      remainingSeconds: 600,
+      durationSeconds: 600,
+      running: false,
+    });
+  });
+
+  it("keeps running timers on their current duration", () => {
+    const running = togglePomodoro(initialPomodoroState(1500));
+
+    expect(setPomodoroDuration(running, 600)).toBe(running);
   });
 
   it("ticks running timers and reports completion", () => {
