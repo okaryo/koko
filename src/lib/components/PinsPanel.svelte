@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
+  import Archive from "@lucide/svelte/icons/archive";
+  import Plus from "@lucide/svelte/icons/plus";
   import {
     archivePin as archivePersistedPin,
     createPin as createPersistedPin,
@@ -13,6 +15,7 @@
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
   let newPinTextareaElement = $state<HTMLTextAreaElement>();
+  let composerOpen = $state(false);
   let pinListElement = $state<HTMLDivElement>();
   let selectedPinId = $state<number | null>(null);
   let editingPinId = $state<number | null>(null);
@@ -28,6 +31,7 @@
     const body = newPinBody.trim();
 
     if (!body) {
+      closeComposer();
       return;
     }
 
@@ -36,10 +40,26 @@
 
       pins = [pin, ...pins];
       selectedPinId = pin.id;
-      newPinBody = "";
+      closeComposer();
     } catch (error) {
       console.warn("Pin create failed", error);
     }
+  }
+
+  async function openComposer() {
+    composerOpen = true;
+
+    await tick();
+    newPinTextareaElement?.focus();
+  }
+
+  function closeComposer() {
+    composerOpen = false;
+    newPinBody = "";
+  }
+
+  function discardComposer() {
+    closeComposer();
   }
 
   async function archivePin(id: number) {
@@ -56,11 +76,27 @@
     selectedPinId = pin.id;
     editingPinId = pin.id;
     editingPinBody = pin.body;
+
+    void tick().then(() => {
+      const editTextarea = document.querySelector<HTMLTextAreaElement>(
+        `[data-pin-edit-id="${pin.id}"]`,
+      );
+
+      editTextarea?.focus();
+      editTextarea?.setSelectionRange(
+        editTextarea.value.length,
+        editTextarea.value.length,
+      );
+    });
   }
 
-  function cancelEditingPin() {
+  function stopEditingPin() {
     editingPinId = null;
     editingPinBody = "";
+  }
+
+  function discardEditingPin() {
+    stopEditingPin();
   }
 
   async function saveEditingPin() {
@@ -68,17 +104,15 @@
       return;
     }
 
-    const body = editingPinBody.trim();
-
-    if (!body) {
-      return;
-    }
-
     try {
-      const updatedPin = await updatePinBody(editingPinId, body, Date.now());
+      const updatedPin = await updatePinBody(
+        editingPinId,
+        editingPinBody,
+        Date.now(),
+      );
 
       pins = pins.map((pin) => (pin.id === updatedPin.id ? updatedPin : pin));
-      cancelEditingPin();
+      stopEditingPin();
     } catch (error) {
       console.warn("Pin update failed", error);
     }
@@ -115,7 +149,7 @@
   function handlePinCommand(command: ReturnType<typeof pinCommandFromKeydown>) {
     switch (command) {
       case "focusCreate":
-        newPinTextareaElement?.focus();
+        void openComposer();
         break;
       case "moveDown":
         movePinSelection(1);
@@ -185,6 +219,51 @@
       activeElement instanceof Node && pinListElement?.contains(activeElement)
     );
   }
+
+  function handlePinKeydown(event: KeyboardEvent, pin: Pin) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    startEditingPin(pin);
+  }
+
+  function handleComposerKeydown(event: KeyboardEvent) {
+    if (isSaveShortcut(event)) {
+      event.preventDefault();
+      void createPin();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      discardComposer();
+    }
+  }
+
+  function handleEditKeydown(event: KeyboardEvent) {
+    if (isSaveShortcut(event)) {
+      event.preventDefault();
+      void saveEditingPin();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      discardEditingPin();
+    }
+  }
+
+  function isSaveShortcut(event: KeyboardEvent) {
+    return (
+      event.metaKey &&
+      !event.shiftKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      event.key === "Enter"
+    );
+  }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -192,27 +271,33 @@
 <section class="pins-panel" aria-label="Pins">
   <header class="panel-header">
     <h2>Pins</h2>
+    <button
+      class="icon-button add-pin-button"
+      type="button"
+      aria-label="Create pin"
+      title="Create pin"
+      onclick={() => void openComposer()}
+    >
+      <Plus size={16} strokeWidth={2.2} aria-hidden="true" />
+    </button>
   </header>
 
-  <form
-    class="pin-form"
-    onsubmit={(event) => {
-      event.preventDefault();
-      createPin();
-    }}
-  >
-    <textarea
-      bind:this={newPinTextareaElement}
-      bind:value={newPinBody}
-      rows="3"
-      use:disableAutocorrect
-      autocapitalize="off"
-      autocomplete="off"
-      placeholder="Pin a monthly goal, reminder, or idea..."
-      spellcheck="false"
-      aria-label="New pin"></textarea>
-    <button type="submit">Pin</button>
-  </form>
+  {#if composerOpen}
+    <div class="pin pin-composer">
+      <textarea
+        bind:this={newPinTextareaElement}
+        bind:value={newPinBody}
+        rows="3"
+        use:disableAutocorrect
+        autocapitalize="off"
+        autocomplete="off"
+        placeholder="Pin a monthly goal, reminder, or idea..."
+        spellcheck="false"
+        aria-label="New pin"
+        onkeydown={handleComposerKeydown}
+        onblur={() => void createPin()}></textarea>
+    </div>
+  {/if}
 
   <div
     class="pin-list"
@@ -232,29 +317,38 @@
           class:pin-selected={selectedPinId === pin.id}
           aria-selected={selectedPinId === pin.id}
           onfocusin={() => selectPin(pin.id)}
+          onclick={() => startEditingPin(pin)}
+          onkeydown={(event) => handlePinKeydown(event, pin)}
           role="option"
+          tabindex="-1"
         >
           {#if editingPinId === pin.id}
             <textarea
+              data-pin-edit-id={pin.id}
               bind:value={editingPinBody}
               rows="3"
               use:disableAutocorrect
               autocapitalize="off"
               autocomplete="off"
               spellcheck="false"
-              aria-label="Edit pin"></textarea>
-            <div class="pin-actions">
-              <button type="button" onclick={saveEditingPin}>Save</button>
-              <button type="button" onclick={cancelEditingPin}>Cancel</button>
-            </div>
+              aria-label="Edit pin"
+              onclick={(event) => event.stopPropagation()}
+              onkeydown={handleEditKeydown}
+              onblur={() => void saveEditingPin()}></textarea>
           {:else}
             <p>{pin.body}</p>
             <div class="pin-actions">
-              <button type="button" onclick={() => startEditingPin(pin)}>
-                Edit
-              </button>
-              <button type="button" onclick={() => archivePin(pin.id)}>
-                Archive
+              <button
+                class="icon-button pin-action-button"
+                type="button"
+                aria-label="Archive pin"
+                title="Archive pin"
+                onclick={(event) => {
+                  event.stopPropagation();
+                  void archivePin(pin.id);
+                }}
+              >
+                <Archive size={14} strokeWidth={2.2} aria-hidden="true" />
               </button>
             </div>
           {/if}
@@ -293,25 +387,22 @@
     line-height: 1.1;
   }
 
-  .pin-form {
-    display: flex;
-    min-width: 0;
-    flex: 0 0 auto;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px;
-    border: 1px solid rgba(43, 41, 36, 0.12);
-    border-radius: 8px;
-    background: rgba(255, 252, 246, 0.82);
+  .icon-button {
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    color: #4a4438;
   }
 
-  .pin-form textarea {
-    min-height: 72px;
-    padding: 10px;
-  }
-
-  .pin-form button {
-    align-self: flex-start;
+  .icon-button:hover {
+    background: rgba(74, 68, 56, 0.08);
+    color: #20211f;
   }
 
   .pin-list {
@@ -325,18 +416,53 @@
   }
 
   .pin {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 12px;
-    border: 1px solid rgba(43, 41, 36, 0.12);
-    border-radius: 8px;
-    background: #fff4bf;
+    gap: 8px;
+    min-height: 82px;
+    padding: 14px 36px 16px 14px;
+    border: 1px solid rgba(130, 107, 46, 0.18);
+    border-radius: 6px;
+    background: #fff1a8;
+    box-shadow: 0 8px 18px rgba(65, 52, 22, 0.08);
+    cursor: text;
+    overflow: hidden;
+  }
+
+  .pin::before {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    content: "";
+    pointer-events: none;
+  }
+
+  .pin::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 22px;
+    height: 22px;
+    border-top-left-radius: 2px;
+    background: #d8b73d;
+    clip-path: polygon(100% 0, 0 100%, 100% 100%);
+    content: "";
+    pointer-events: none;
+  }
+
+  .pin-composer {
+    flex: 0 0 auto;
   }
 
   .pin-selected {
-    border-color: rgba(89, 113, 62, 0.7);
-    box-shadow: 0 0 0 1px rgba(89, 113, 62, 0.22);
+    border-color: rgba(89, 113, 62, 0.45);
+    box-shadow:
+      0 0 0 1px rgba(89, 113, 62, 0.14),
+      0 8px 18px rgba(65, 52, 22, 0.08);
   }
 
   .pin p,
@@ -348,25 +474,43 @@
     white-space: pre-wrap;
   }
 
-  .pin button {
-    align-self: flex-start;
-    background: transparent;
-    color: #4a4438;
+  .pin p {
+    min-height: 3rem;
   }
 
-  .pin button:hover {
-    background: rgba(74, 68, 56, 0.08);
+  .pin-action-button {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    background: rgba(255, 251, 231, 0.56);
+    cursor: default;
   }
 
   .pin textarea {
-    min-height: 76px;
-    padding: 9px;
-    background: rgba(255, 253, 248, 0.76);
+    min-height: 78px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #4a4438;
+    line-height: 1.45;
+  }
+
+  .pin textarea:focus-visible {
+    outline: none;
   }
 
   .pin-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .pin:hover .pin-actions,
+  .pin:focus-within .pin-actions {
+    opacity: 1;
   }
 </style>
