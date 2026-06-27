@@ -39,9 +39,8 @@
       title: "Pins",
       shortcuts: [
         { action: "Focus new pin", keys: ["Cmd", "Shift", "I"] },
-        { action: "Move selection", keys: ["J/K", "Arrow keys"] },
-        { action: "Edit selected pin", keys: ["E"] },
-        { action: "Archive selected pin", keys: ["Shift", "D"] },
+        { action: "Save pin", keys: ["Cmd", "Enter"] },
+        { action: "Cancel pin editing", keys: ["Esc"] },
       ],
     },
     {

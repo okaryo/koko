@@ -9,15 +9,13 @@
     type Pin,
     updatePinBody,
   } from "$lib/api/pins";
-  import { isEditableTarget, pinCommandFromKeydown } from "$lib/keyboard";
+  import { pinCommandFromKeydown } from "$lib/keyboard";
   import { disableAutocorrect } from "$lib/textAssist";
 
   let pins = $state<Pin[]>([]);
   let newPinBody = $state("");
   let newPinTextareaElement = $state<HTMLTextAreaElement>();
   let composerOpen = $state(false);
-  let pinListElement = $state<HTMLDivElement>();
-  let selectedPinId = $state<number | null>(null);
   let editingPinId = $state<number | null>(null);
   let editingPinBody = $state("");
 
@@ -39,7 +37,6 @@
       const pin = await createPersistedPin(body, Date.now());
 
       pins = [pin, ...pins];
-      selectedPinId = pin.id;
       closeComposer();
     } catch (error) {
       console.warn("Pin create failed", error);
@@ -66,14 +63,12 @@
     try {
       await archivePersistedPin(id, Date.now());
       pins = pins.filter((pin) => pin.id !== id);
-      ensureSelectedPin();
     } catch (error) {
       console.warn("Pin archive failed", error);
     }
   }
 
   function startEditingPin(pin: Pin) {
-    selectedPinId = pin.id;
     editingPinId = pin.id;
     editingPinBody = pin.body;
 
@@ -134,99 +129,8 @@
       return;
     }
 
-    if (pinCommand !== "focusCreate" && !pinsPanelContainsFocus()) {
-      return;
-    }
-
-    if (pinCommand !== "focusCreate" && isEditableTarget(event.target)) {
-      return;
-    }
-
     event.preventDefault();
-    handlePinCommand(pinCommand);
-  }
-
-  function handlePinCommand(command: ReturnType<typeof pinCommandFromKeydown>) {
-    switch (command) {
-      case "focusCreate":
-        void openComposer();
-        break;
-      case "moveDown":
-        movePinSelection(1);
-        break;
-      case "moveUp":
-        movePinSelection(-1);
-        break;
-      case "editSelected":
-        editSelectedPin();
-        break;
-      case "archiveSelected":
-        void archiveSelectedPin();
-        break;
-    }
-  }
-
-  function movePinSelection(delta: number) {
-    if (pins.length === 0) {
-      selectedPinId = null;
-      return;
-    }
-
-    const currentIndex = Math.max(
-      0,
-      pins.findIndex((pin) => pin.id === selectedPinId),
-    );
-    const nextIndex = Math.min(
-      pins.length - 1,
-      Math.max(0, currentIndex + delta),
-    );
-
-    selectedPinId = pins[nextIndex].id;
-  }
-
-  function editSelectedPin() {
-    const selectedPin = pins.find((pin) => pin.id === selectedPinId) ?? pins[0];
-
-    if (selectedPin) {
-      startEditingPin(selectedPin);
-    }
-  }
-
-  async function archiveSelectedPin() {
-    const selectedPin = pins.find((pin) => pin.id === selectedPinId);
-
-    if (selectedPin) {
-      await archivePin(selectedPin.id);
-    }
-  }
-
-  function ensureSelectedPin() {
-    if (pins.some((pin) => pin.id === selectedPinId)) {
-      return;
-    }
-
-    selectedPinId = pins[0]?.id ?? null;
-  }
-
-  function selectPin(id: number) {
-    selectedPinId = id;
-  }
-
-  function pinsPanelContainsFocus() {
-    const activeElement = document.activeElement;
-
-    return (
-      activeElement instanceof Node && pinListElement?.contains(activeElement)
-    );
-  }
-
-  function handlePinKeydown(event: KeyboardEvent, pin: Pin) {
-    if (event.key !== "Enter" && event.key !== " ") {
-      return;
-    }
-
-    event.preventDefault();
-    startEditingPin(pin);
+    void openComposer();
   }
 
   function handleComposerKeydown(event: KeyboardEvent) {
@@ -253,6 +157,15 @@
       event.preventDefault();
       discardEditingPin();
     }
+  }
+
+  function handlePinEditTargetKeydown(event: KeyboardEvent, pin: Pin) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    startEditingPin(pin);
   }
 
   function isSaveShortcut(event: KeyboardEvent) {
@@ -299,14 +212,7 @@
     </div>
   {/if}
 
-  <div
-    class="pin-list"
-    aria-label="Active pins"
-    aria-activedescendant={selectedPinId ? `pin-${selectedPinId}` : undefined}
-    bind:this={pinListElement}
-    role="listbox"
-    tabindex="0"
-  >
+  <div class="pin-list" aria-label="Active pins">
     {#if pins.length === 0}
       <p class="empty-state">No pins yet.</p>
     {:else}
@@ -314,13 +220,7 @@
         <div
           id={`pin-${pin.id}`}
           class="pin"
-          class:pin-selected={selectedPinId === pin.id}
-          aria-selected={selectedPinId === pin.id}
-          onfocusin={() => selectPin(pin.id)}
-          onclick={() => startEditingPin(pin)}
-          onkeydown={(event) => handlePinKeydown(event, pin)}
-          role="option"
-          tabindex="-1"
+          class:pin-display={editingPinId !== pin.id}
         >
           {#if editingPinId === pin.id}
             <textarea
@@ -336,7 +236,16 @@
               onkeydown={handleEditKeydown}
               onblur={() => void saveEditingPin()}></textarea>
           {:else}
-            <p>{pin.body}</p>
+            <div
+              class="pin-edit-button"
+              aria-label="Edit pin"
+              role="button"
+              tabindex="0"
+              onclick={() => startEditingPin(pin)}
+              onkeydown={(event) => handlePinEditTargetKeydown(event, pin)}
+            >
+              <p>{pin.body}</p>
+            </div>
             <div class="pin-actions">
               <button
                 class="icon-button pin-action-button"
@@ -430,6 +339,34 @@
     overflow: hidden;
   }
 
+  .pin-display {
+    padding: 0;
+  }
+
+  .pin-edit-button {
+    display: block;
+    width: 100%;
+    min-height: 80px;
+    padding: 14px 36px 16px 14px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: text;
+  }
+
+  .pin-edit-button:focus-visible {
+    outline: 2px solid rgba(89, 113, 62, 0.28);
+    outline-offset: -3px;
+  }
+
+  .pin-edit-button:hover {
+    background: transparent;
+    color: inherit;
+  }
+
   .pin::before {
     position: absolute;
     right: 0;
@@ -458,13 +395,6 @@
     flex: 0 0 auto;
   }
 
-  .pin-selected {
-    border-color: rgba(89, 113, 62, 0.45);
-    box-shadow:
-      0 0 0 1px rgba(89, 113, 62, 0.14),
-      0 8px 18px rgba(65, 52, 22, 0.08);
-  }
-
   .pin p,
   .empty-state {
     margin: 0;
@@ -472,10 +402,6 @@
     font-size: 0.9rem;
     line-height: 1.45;
     white-space: pre-wrap;
-  }
-
-  .pin p {
-    min-height: 3rem;
   }
 
   .pin-action-button {
@@ -501,6 +427,7 @@
 
   .pin-actions {
     position: absolute;
+    z-index: 1;
     top: 8px;
     right: 8px;
     display: flex;

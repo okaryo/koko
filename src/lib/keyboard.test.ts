@@ -62,12 +62,12 @@ describe("keyboard shortcuts", () => {
         keydown({ key: "i", metaKey: true, shiftKey: true }),
       ),
     ).toBe("focusCreate");
-    expect(pinCommandFromKeydown(keydown({ key: "j" }))).toBe("moveDown");
-    expect(pinCommandFromKeydown(keydown({ key: "ArrowUp" }))).toBe("moveUp");
-    expect(pinCommandFromKeydown(keydown({ key: "e" }))).toBe("editSelected");
-    expect(pinCommandFromKeydown(keydown({ key: "D", shiftKey: true }))).toBe(
-      "archiveSelected",
-    );
+    expect(pinCommandFromKeydown(keydown({ key: "j" }))).toBeNull();
+    expect(pinCommandFromKeydown(keydown({ key: "ArrowUp" }))).toBeNull();
+    expect(pinCommandFromKeydown(keydown({ key: "e" }))).toBeNull();
+    expect(
+      pinCommandFromKeydown(keydown({ key: "D", shiftKey: true })),
+    ).toBeNull();
   });
 
   it("maps app shortcuts", () => {

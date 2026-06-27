@@ -25,13 +25,9 @@ Use this checklist before reviewing keyboard-related changes.
 ## Pins
 
 - [ ] `Cmd+Shift+I` focuses the new Pin input.
-- [ ] `j` and `ArrowDown` move selection down when the Pins list is focused.
-- [ ] `k` and `ArrowUp` move selection up when the Pins list is focused.
-- [ ] `e` edits the selected Pin when the Pins list is focused.
 - [ ] `Cmd+Enter` saves a Pin composer or edit.
 - [ ] `Esc` discards a Pin composer or edit.
-- [ ] `Shift+D` archives the selected Pin when the Pins list is focused.
-- [ ] Single-key Pin shortcuts do not run while editing Pin text.
+- [ ] `j`, `k`, arrow keys, `e`, and `Shift+D` do not run Pin list commands.
 
 ## App
 

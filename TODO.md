@@ -103,9 +103,8 @@ Daily workspace decisions:
 - [x] Create Pin
 - [x] Edit Pin
 - [x] Archive Pin
-- [x] Add keyboard-first Pin navigation
 - [x] Add keyboard shortcut for creating a Pin
-- [x] Add keyboard shortcut for archiving a Pin
+- [x] Keep existing Pin management mouse-first
 
 Pin decisions:
 
@@ -115,9 +114,11 @@ Pin decisions:
 - Pins are for month-level goals, reminders, and small ideas.
 - Pins should not become a task database, board, hierarchy, or tagging system.
 - `Cmd+Shift+I`: focus the new Pin input.
-- `j` / `k` and `ArrowDown` / `ArrowUp`: move Pin selection when the Pins list is focused.
-- `e`: edit the selected Pin when the Pins list is focused.
-- `Shift+D`: archive the selected Pin when the Pins list is focused.
+- `Cmd+Enter`: save a Pin composer or edit.
+- `Esc`: discard a Pin composer or edit.
+- Existing Pins are edited by clicking the sticky note.
+- Existing Pins are archived by using the hover action.
+- Pins do not have a selected state in `v0.1.0`.
 
 ---
 
