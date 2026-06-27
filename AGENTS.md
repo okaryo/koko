@@ -110,7 +110,7 @@ databases unless there is a clear reason.
 Sticky Notes are visible, date-independent notes for goals, reminders, and ideas.
 
 Avoid turning Sticky Notes into a task manager, board, hierarchy, or tagging system.
-Sticky Notes should be easy to create and archive.
+Sticky Notes should be easy to create, pin, unpin, and archive.
 
 ### 3. Preserve Markdown Portability
 

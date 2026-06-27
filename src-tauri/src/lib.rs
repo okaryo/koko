@@ -20,6 +20,8 @@ pub fn run() {
             sticky_note::commands::create_sticky_note,
             sticky_note::commands::update_sticky_note_body,
             sticky_note::commands::archive_sticky_note,
+            sticky_note::commands::pin_sticky_note,
+            sticky_note::commands::unpin_sticky_note,
             settings::commands::get_settings,
             settings::commands::update_pomodoro_timer_settings,
             settings::commands::update_pomodoro_volume_settings,

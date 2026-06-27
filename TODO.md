@@ -103,6 +103,8 @@ Daily workspace decisions:
 - [x] Create StickyNote
 - [x] Edit StickyNote
 - [x] Archive StickyNote
+- [x] Pin StickyNote
+- [x] Unpin StickyNote
 - [x] Add keyboard shortcut for creating a StickyNote
 - [x] Keep existing StickyNote management mouse-first
 
@@ -117,9 +119,11 @@ StickyNote decisions:
 - `Cmd+Enter`: save a sticky note composer or edit.
 - `Esc`: discard a sticky note composer or edit.
 - Existing Sticky Notes are edited by clicking the sticky note.
+- Existing Sticky Notes are pinned or unpinned by using the hover action.
 - Existing Sticky Notes are archived by using the hover action.
 - Sticky Notes do not have a selected state in `v0.1.0`.
-- Sticky Notes do not have pin/unpin behavior in `v0.1.0`.
+- Sticky Notes use `pinnedAtMs` to represent pin state and pinned ordering.
+- Pinned Sticky Notes are shown before unpinned Sticky Notes, newest pinned first.
 
 ---
 

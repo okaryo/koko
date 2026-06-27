@@ -35,3 +35,17 @@ pub fn archive_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<Stick
 
     repository::archive(&connection, id, now_ms)
 }
+
+#[tauri::command]
+pub fn pin_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<StickyNote, String> {
+    let connection = db::open(&app)?;
+
+    repository::pin(&connection, id, now_ms)
+}
+
+#[tauri::command]
+pub fn unpin_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<StickyNote, String> {
+    let connection = db::open(&app)?;
+
+    repository::unpin(&connection, id, now_ms)
+}

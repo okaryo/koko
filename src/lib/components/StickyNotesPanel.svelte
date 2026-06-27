@@ -1,12 +1,16 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import Archive from "@lucide/svelte/icons/archive";
+  import PinIcon from "@lucide/svelte/icons/pin";
+  import PinOff from "@lucide/svelte/icons/pin-off";
   import Plus from "@lucide/svelte/icons/plus";
   import {
     archiveStickyNote as archivePersistedStickyNote,
     createStickyNote as createPersistedStickyNote,
     listStickyNotes,
+    pinStickyNote as pinPersistedStickyNote,
     type StickyNote,
+    unpinStickyNote as unpinPersistedStickyNote,
     updateStickyNoteBody,
   } from "$lib/api/stickyNotes";
   import { stickyNoteCommandFromKeydown } from "$lib/keyboard";
@@ -36,7 +40,7 @@
     try {
       const stickyNote = await createPersistedStickyNote(body, Date.now());
 
-      stickyNotes = [stickyNote, ...stickyNotes];
+      upsertStickyNote(stickyNote);
       closeComposer();
     } catch (error) {
       console.warn("StickyNote create failed", error);
@@ -65,6 +69,19 @@
       stickyNotes = stickyNotes.filter((stickyNote) => stickyNote.id !== id);
     } catch (error) {
       console.warn("StickyNote archive failed", error);
+    }
+  }
+
+  async function toggleStickyNotePin(stickyNote: StickyNote) {
+    try {
+      const updatedStickyNote =
+        stickyNote.pinnedAtMs === null
+          ? await pinPersistedStickyNote(stickyNote.id, Date.now())
+          : await unpinPersistedStickyNote(stickyNote.id, Date.now());
+
+      upsertStickyNote(updatedStickyNote);
+    } catch (error) {
+      console.warn("StickyNote pin toggle failed", error);
     }
   }
 
@@ -106,9 +123,7 @@
         Date.now(),
       );
 
-      stickyNotes = stickyNotes.map((stickyNote) =>
-        stickyNote.id === updatedStickyNote.id ? updatedStickyNote : stickyNote,
-      );
+      upsertStickyNote(updatedStickyNote);
       stopEditingStickyNote();
     } catch (error) {
       console.warn("StickyNote update failed", error);
@@ -122,6 +137,41 @@
       console.warn("Sticky Notes load failed", error);
       return [];
     }
+  }
+
+  function upsertStickyNote(updatedStickyNote: StickyNote) {
+    const existingStickyNote = stickyNotes.some(
+      (stickyNote) => stickyNote.id === updatedStickyNote.id,
+    );
+    const nextStickyNotes = existingStickyNote
+      ? stickyNotes.map((stickyNote) =>
+          stickyNote.id === updatedStickyNote.id
+            ? updatedStickyNote
+            : stickyNote,
+        )
+      : [updatedStickyNote, ...stickyNotes];
+
+    stickyNotes = [...nextStickyNotes].sort(compareStickyNotes);
+  }
+
+  function compareStickyNotes(a: StickyNote, b: StickyNote) {
+    if (a.pinnedAtMs !== null || b.pinnedAtMs !== null) {
+      if (a.pinnedAtMs === null) {
+        return 1;
+      }
+
+      if (b.pinnedAtMs === null) {
+        return -1;
+      }
+
+      return b.pinnedAtMs - a.pinnedAtMs;
+    }
+
+    if (a.createdAtMs !== b.createdAtMs) {
+      return b.createdAtMs - a.createdAtMs;
+    }
+
+    return b.id - a.id;
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -226,8 +276,14 @@
           id={`sticky-note-${stickyNote.id}`}
           class={`sticky-note ${
             editingStickyNoteId !== stickyNote.id ? "sticky-note-display" : ""
-          }`}
+          } ${stickyNote.pinnedAtMs !== null ? "sticky-note-pinned" : ""}`}
         >
+          {#if stickyNote.pinnedAtMs !== null}
+            <div class="sticky-note-pin-indicator" aria-hidden="true">
+              <PinIcon size={12} strokeWidth={2.4} />
+            </div>
+          {/if}
+
           {#if editingStickyNoteId === stickyNote.id}
             <textarea
               data-sticky-note-edit-id={stickyNote.id}
@@ -254,6 +310,30 @@
               <p>{stickyNote.body}</p>
             </div>
             <div class="sticky-note-actions">
+              <button
+                class={`icon-button sticky-note-action-button ${
+                  stickyNote.pinnedAtMs !== null
+                    ? "sticky-note-action-button-active"
+                    : ""
+                }`}
+                type="button"
+                aria-label={stickyNote.pinnedAtMs === null
+                  ? "Pin sticky note"
+                  : "Unpin sticky note"}
+                title={stickyNote.pinnedAtMs === null
+                  ? "Pin sticky note"
+                  : "Unpin sticky note"}
+                onclick={(event) => {
+                  event.stopPropagation();
+                  void toggleStickyNotePin(stickyNote);
+                }}
+              >
+                {#if stickyNote.pinnedAtMs === null}
+                  <PinIcon size={14} strokeWidth={2.2} aria-hidden="true" />
+                {:else}
+                  <PinOff size={14} strokeWidth={2.2} aria-hidden="true" />
+                {/if}
+              </button>
               <button
                 class="icon-button sticky-note-action-button"
                 type="button"
@@ -350,11 +430,32 @@
     padding: 0;
   }
 
+  .sticky-note-pinned {
+    border-color: rgba(89, 113, 62, 0.34);
+  }
+
+  .sticky-note-pin-indicator {
+    position: absolute;
+    z-index: 1;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(89, 113, 62, 0.14);
+    color: #2f3f24;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
   .sticky-note-edit-button {
     display: block;
     width: 100%;
     min-height: 80px;
-    padding: 14px 36px 16px 14px;
+    padding: 14px 68px 16px 14px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -419,6 +520,12 @@
     cursor: default;
   }
 
+  .sticky-note-action-button-active,
+  .sticky-note-action-button-active:hover {
+    background: rgba(89, 113, 62, 0.14);
+    color: #2f3f24;
+  }
+
   .sticky-note textarea {
     min-height: 78px;
     padding: 0;
@@ -446,5 +553,10 @@
   .sticky-note:hover .sticky-note-actions,
   .sticky-note:focus-within .sticky-note-actions {
     opacity: 1;
+  }
+
+  .sticky-note:hover .sticky-note-pin-indicator,
+  .sticky-note:focus-within .sticky-note-pin-indicator {
+    opacity: 0;
   }
 </style>

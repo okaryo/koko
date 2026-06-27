@@ -5,6 +5,7 @@ export type StickyNote = {
   body: string;
   createdAtMs: number;
   updatedAtMs: number;
+  pinnedAtMs: number | null;
   archivedAtMs: number | null;
 };
 
@@ -22,4 +23,12 @@ export function updateStickyNoteBody(id: number, body: string, nowMs: number) {
 
 export function archiveStickyNote(id: number, nowMs: number) {
   return invoke<StickyNote>("archive_sticky_note", { id, nowMs });
+}
+
+export function pinStickyNote(id: number, nowMs: number) {
+  return invoke<StickyNote>("pin_sticky_note", { id, nowMs });
+}
+
+export function unpinStickyNote(id: number, nowMs: number) {
+  return invoke<StickyNote>("unpin_sticky_note", { id, nowMs });
 }

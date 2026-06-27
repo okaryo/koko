@@ -5,10 +5,14 @@ pub fn list_active(connection: &Connection) -> Result<Vec<StickyNote>, String> {
     let mut statement = connection
         .prepare(
             "
-            SELECT id, body, created_at_ms, updated_at_ms, archived_at_ms
+            SELECT id, body, created_at_ms, updated_at_ms, pinned_at_ms, archived_at_ms
             FROM sticky_notes
             WHERE archived_at_ms IS NULL
-            ORDER BY created_at_ms DESC, id DESC
+            ORDER BY
+                pinned_at_ms IS NULL ASC,
+                pinned_at_ms DESC,
+                created_at_ms DESC,
+                id DESC
             ",
         )
         .map_err(|error| format!("Failed to prepare StickyNote list query: {error}"))?;
@@ -26,8 +30,9 @@ pub fn create(connection: &Connection, body: &str, now_ms: i64) -> Result<Sticky
     connection
         .execute(
             "
-            INSERT INTO sticky_notes (body, created_at_ms, updated_at_ms, archived_at_ms)
-            VALUES (?1, ?2, ?2, NULL)
+            INSERT INTO sticky_notes
+                (body, created_at_ms, updated_at_ms, pinned_at_ms, archived_at_ms)
+            VALUES (?1, ?2, ?2, NULL, NULL)
             ",
             params![body, now_ms],
         )
@@ -85,11 +90,53 @@ pub fn archive(connection: &Connection, id: u32, now_ms: i64) -> Result<StickyNo
     find_by_id(connection, id)?.ok_or_else(|| format!("StickyNote {id} was not found."))
 }
 
+pub fn pin(connection: &Connection, id: u32, now_ms: i64) -> Result<StickyNote, String> {
+    let updated_rows = connection
+        .execute(
+            "
+            UPDATE sticky_notes
+            SET pinned_at_ms = ?1,
+                updated_at_ms = ?1
+            WHERE id = ?2
+              AND archived_at_ms IS NULL
+            ",
+            params![now_ms, id],
+        )
+        .map_err(|error| format!("Failed to pin StickyNote: {error}"))?;
+
+    if updated_rows == 0 {
+        return Err(format!("Active StickyNote {id} was not found."));
+    }
+
+    find_by_id(connection, id)?.ok_or_else(|| format!("StickyNote {id} was not found."))
+}
+
+pub fn unpin(connection: &Connection, id: u32, now_ms: i64) -> Result<StickyNote, String> {
+    let updated_rows = connection
+        .execute(
+            "
+            UPDATE sticky_notes
+            SET pinned_at_ms = NULL,
+                updated_at_ms = ?1
+            WHERE id = ?2
+              AND archived_at_ms IS NULL
+            ",
+            params![now_ms, id],
+        )
+        .map_err(|error| format!("Failed to unpin StickyNote: {error}"))?;
+
+    if updated_rows == 0 {
+        return Err(format!("Active StickyNote {id} was not found."));
+    }
+
+    find_by_id(connection, id)?.ok_or_else(|| format!("StickyNote {id} was not found."))
+}
+
 fn find_by_id(connection: &Connection, id: u32) -> Result<Option<StickyNote>, String> {
     let mut statement = connection
         .prepare(
             "
-            SELECT id, body, created_at_ms, updated_at_ms, archived_at_ms
+            SELECT id, body, created_at_ms, updated_at_ms, pinned_at_ms, archived_at_ms
             FROM sticky_notes
             WHERE id = ?1
             ",
@@ -117,7 +164,8 @@ fn row_to_sticky_note(row: &rusqlite::Row<'_>) -> rusqlite::Result<StickyNote> {
         body: row.get(1)?,
         created_at_ms: row.get(2)?,
         updated_at_ms: row.get(3)?,
-        archived_at_ms: row.get(4)?,
+        pinned_at_ms: row.get(4)?,
+        archived_at_ms: row.get(5)?,
     })
 }
 
@@ -135,6 +183,7 @@ mod tests {
         assert_eq!(sticky_note.body, "Remember this");
         assert_eq!(sticky_note.created_at_ms, 1000);
         assert_eq!(sticky_note.updated_at_ms, 1000);
+        assert_eq!(sticky_note.pinned_at_ms, None);
         assert_eq!(sticky_note.archived_at_ms, None);
     }
 
@@ -173,6 +222,38 @@ mod tests {
 
         assert_eq!(updated.body, "After");
         assert_eq!(updated.updated_at_ms, 2000);
+        assert_eq!(updated.pinned_at_ms, None);
         assert_eq!(updated.archived_at_ms, None);
+    }
+
+    #[test]
+    fn lists_pinned_sticky_notes_first_by_pinned_time() {
+        let connection = migrated_connection();
+        let oldest = create(&connection, "Oldest", 1000).expect("create oldest sticky note");
+        let newest = create(&connection, "Newest", 2000).expect("create newest sticky note");
+        let middle = create(&connection, "Middle", 1500).expect("create middle sticky note");
+
+        pin(&connection, oldest.id, 3000).expect("pin oldest sticky note");
+        pin(&connection, middle.id, 4000).expect("pin middle sticky note");
+
+        let sticky_notes = list_active(&connection).expect("list sticky notes");
+
+        assert_eq!(sticky_notes[0].id, middle.id);
+        assert_eq!(sticky_notes[1].id, oldest.id);
+        assert_eq!(sticky_notes[2].id, newest.id);
+    }
+
+    #[test]
+    fn pins_and_unpins_sticky_note() {
+        let connection = migrated_connection();
+        let sticky_note = create(&connection, "Pin me", 1000).expect("create sticky note");
+
+        let pinned = pin(&connection, sticky_note.id, 2000).expect("pin sticky note");
+        let unpinned = unpin(&connection, sticky_note.id, 3000).expect("unpin sticky note");
+
+        assert_eq!(pinned.pinned_at_ms, Some(2000));
+        assert_eq!(pinned.updated_at_ms, 2000);
+        assert_eq!(unpinned.pinned_at_ms, None);
+        assert_eq!(unpinned.updated_at_ms, 3000);
     }
 }

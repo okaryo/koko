@@ -50,7 +50,8 @@ Sticky Notes are date-independent notes that remain visible in the window.
 
 They are for month-level goals, reminders, and small ideas that should stay in
 sight while the DailyNote changes over time. Sticky Notes can be created and
-archived, but they should not become a task database or project board.
+pinned, unpinned, and archived, but they should not become a task database or
+project board.
 
 ## Pomodoro
 
