@@ -11,8 +11,8 @@
 - [x] Decide the initial storage format: SQLite
 - [x] Decide to include Pins in v0.1.0
 - [x] Decide to use Tiptap for the editor
-- [ ] Decide whether the first version should import or ignore Current data
-- [ ] Decide whether the first version should include a Quick Entry window
+- [x] Decide not to import Current data in v0.1.0
+- [x] Decide not to include a Quick Entry window in v0.1.0
 
 Direction decisions:
 
@@ -32,6 +32,8 @@ Direction decisions:
 - Pomodoro exists to support rhythm, not to drive analytics or scoring.
 - Pomodoro behavior, sound volume settings, and keyboard shortcuts should follow Current where practical.
 - Current is the implementation reference, but its separate Todo and Log sections should not be carried over.
+- koko should not import Current data in `v0.1.0`.
+- koko should not include a Quick Entry window in `v0.1.0`.
 
 Open product questions:
 
@@ -39,7 +41,6 @@ Open product questions:
 - When the user starts today's note, should koko create a blank note, copy a template, or insert a default heading?
 - Should koko show previous DailyNotes in-app in `v0.1.0`, or only focus on the active DailyNote?
 - Should Pomodoro completion insert a timestamp or prompt in the DailyNote?
-- Should Quick Entry exist in the first release, and if so, should it append content to the active DailyNote?
 
 ---
 
