@@ -391,6 +391,25 @@
     margin: 0 0 0.7rem;
   }
 
+  :global(.daily-note-editor h1),
+  :global(.daily-note-editor h2),
+  :global(.daily-note-editor h3),
+  :global(.daily-note-editor h4),
+  :global(.daily-note-editor h5),
+  :global(.daily-note-editor h6) {
+    margin: 1rem 0 0.55rem;
+    line-height: 1.25;
+  }
+
+  :global(.daily-note-editor h1:first-child),
+  :global(.daily-note-editor h2:first-child),
+  :global(.daily-note-editor h3:first-child),
+  :global(.daily-note-editor h4:first-child),
+  :global(.daily-note-editor h5:first-child),
+  :global(.daily-note-editor h6:first-child) {
+    margin-top: 0;
+  }
+
   :global(.daily-note-editor ul),
   :global(.daily-note-editor ol) {
     margin: 0 0 0.7rem;
