@@ -419,7 +419,8 @@
     border: 1px solid rgba(43, 41, 36, 0.12);
     border-radius: 8px;
     background: #fffcf6;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .panel-header {
@@ -458,10 +459,10 @@
     display: flex;
     min-width: 0;
     min-height: 0;
-    flex: 1;
+    flex: 0 0 auto;
     flex-direction: column;
     gap: 10px;
-    overflow: auto;
+    overflow: visible;
   }
 
   .sticky-note {
@@ -554,6 +555,7 @@
     font-size: 0.9rem;
     line-height: 1.45;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   .sticky-note-action-button {
@@ -579,6 +581,7 @@
     line-height: 1.45;
     font-size: 0.9rem;
     overflow: hidden;
+    overflow-wrap: anywhere;
     resize: none;
   }
 
