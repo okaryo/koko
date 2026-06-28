@@ -176,6 +176,7 @@ Pomodoro decisions:
 - [x] Ensure focus behavior is predictable
 - [x] Preserve native text editing behavior where possible
 - [x] Add global shortcut for focusing the DailyNote editor
+- [x] Make the DailyNote global shortcut configurable
 
 Keyboard decisions:
 
@@ -186,7 +187,8 @@ Keyboard decisions:
 - DailyNote timestamp insertion does not run while focus is in another text input.
 - Open dialogs block DailyNote editor shortcuts so commands do not affect the editor behind the dialog.
 - `CommandOrControl+Shift+L`: bring koko to the front and focus the DailyNote editor from outside the app.
-- The global DailyNote focus shortcut uses Current's default key for now and should become configurable in the next step.
+- The global DailyNote focus shortcut uses Current's default key and can be changed from the keyboard shortcuts dialog.
+- A small keyboard icon in the lower-right corner opens the keyboard shortcuts dialog for users who do not know `Cmd+/`.
 - `Cmd+Shift+P`: start, pause, or continue Pomodoro.
 - `Cmd+Shift+R`: reset Pomodoro.
 - `Cmd+/`: open or close keyboard shortcut help.

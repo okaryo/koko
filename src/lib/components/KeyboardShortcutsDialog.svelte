@@ -1,5 +1,17 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import Pencil from "@lucide/svelte/icons/pencil";
   import X from "@lucide/svelte/icons/x";
+  import {
+    getSettings,
+    updateDailyNoteGlobalShortcut,
+  } from "$lib/api/settings";
+  import {
+    shortcutFromKeydown,
+    shortcutToDisplayKeys,
+  } from "$lib/globalShortcut";
+
+  const DEFAULT_DAILY_NOTE_GLOBAL_SHORTCUT = "CommandOrControl+Shift+L";
 
   type Shortcut = {
     action: string;
@@ -18,12 +30,18 @@
 
   let { open, onClose }: Props = $props();
   let dialogElement = $state<HTMLDialogElement>();
+  let dailyNoteGlobalShortcut = $state(DEFAULT_DAILY_NOTE_GLOBAL_SHORTCUT);
+  let isRecordingGlobalShortcut = $state(false);
+  let isSavingGlobalShortcut = $state(false);
+  let globalShortcutMessage = $state<string | null>(null);
+  const dailyNoteGlobalShortcutKeys = $derived(
+    shortcutToDisplayKeys(dailyNoteGlobalShortcut),
+  );
 
   const shortcutGroups: ShortcutGroup[] = [
     {
       title: "DailyNote",
       shortcuts: [
-        { action: "Focus editor globally", keys: ["Cmd", "Shift", "L"] },
         { action: "Focus editor", keys: ["Cmd", "Shift", "N"] },
         { action: "Copy note", keys: ["Cmd", "Shift", "C"] },
         { action: "Insert timestamp", keys: ["Ctrl", "T"] },
@@ -54,6 +72,16 @@
     },
   ];
 
+  onMount(() => {
+    getSettings()
+      .then((settings) => {
+        dailyNoteGlobalShortcut = settings.globalShortcut.dailyNoteFocus;
+      })
+      .catch((error) => {
+        console.warn("Settings load failed", error);
+      });
+  });
+
   $effect(() => {
     if (!dialogElement) {
       return;
@@ -72,7 +100,87 @@
 
   function handleDialogClick(event: MouseEvent) {
     if (event.target === dialogElement) {
+      cancelRecording();
       onClose();
+    }
+  }
+
+  function handleDialogKeydown(event: KeyboardEvent) {
+    if (!isRecordingGlobalShortcut) {
+      return;
+    }
+
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest("[data-recording-control]")
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (event.key === "Escape") {
+      cancelRecording();
+      return;
+    }
+
+    if (event.repeat || isSavingGlobalShortcut) {
+      return;
+    }
+
+    const result = shortcutFromKeydown(event);
+
+    if (result.status === "pending") {
+      return;
+    }
+
+    if (result.status === "invalid") {
+      globalShortcutMessage = result.message;
+      return;
+    }
+
+    void saveGlobalShortcut(result.shortcut);
+  }
+
+  function handleCancel(event: Event) {
+    if (isRecordingGlobalShortcut) {
+      event.preventDefault();
+      cancelRecording();
+      return;
+    }
+
+    onClose();
+  }
+
+  function startRecording() {
+    if (isSavingGlobalShortcut) {
+      return;
+    }
+
+    isRecordingGlobalShortcut = true;
+    globalShortcutMessage = null;
+  }
+
+  function cancelRecording() {
+    isRecordingGlobalShortcut = false;
+    globalShortcutMessage = null;
+  }
+
+  async function saveGlobalShortcut(shortcut: string) {
+    isSavingGlobalShortcut = true;
+    globalShortcutMessage = null;
+
+    try {
+      const settings = await updateDailyNoteGlobalShortcut(shortcut);
+      dailyNoteGlobalShortcut = settings.globalShortcut.dailyNoteFocus;
+      isRecordingGlobalShortcut = false;
+    } catch (error) {
+      console.warn("DailyNote global shortcut update failed", error);
+      globalShortcutMessage = "That shortcut could not be registered.";
+    } finally {
+      isSavingGlobalShortcut = false;
     }
   }
 </script>
@@ -83,7 +191,8 @@
   tabindex="-1"
   bind:this={dialogElement}
   onclick={handleDialogClick}
-  oncancel={onClose}
+  onkeydown={handleDialogKeydown}
+  oncancel={handleCancel}
   onclose={onClose}
 >
   <div class="dialog-content">
@@ -94,13 +203,72 @@
         type="button"
         aria-label="Close"
         title="Close"
-        onclick={onClose}
+        onclick={() => {
+          cancelRecording();
+          onClose();
+        }}
       >
         <X size={16} strokeWidth={2.2} aria-hidden="true" />
       </button>
     </header>
 
     <div class="shortcut-groups">
+      <section class="shortcut-group">
+        <h3>Global shortcuts</h3>
+        <div class="shortcut-list">
+          <div class="shortcut-row editable-shortcut-row">
+            <span>Focus DailyNote</span>
+            <div class="editable-shortcut-controls">
+              {#if isRecordingGlobalShortcut}
+                <span
+                  class="recording-target"
+                  aria-describedby={globalShortcutMessage
+                    ? "global-shortcut-message"
+                    : undefined}
+                >
+                  Press shortcut
+                </span>
+                <button
+                  class="cancel-recording-button"
+                  type="button"
+                  data-recording-control
+                  title="Cancel shortcut recording"
+                  aria-label="Cancel shortcut recording"
+                  onclick={cancelRecording}
+                >
+                  <X size={14} strokeWidth={2.2} aria-hidden="true" />
+                </button>
+              {:else}
+                <span class="shortcut-keys editable-shortcut-keys">
+                  {#each dailyNoteGlobalShortcutKeys as key, index (`${key}-${index}`)}
+                    <kbd>{key}</kbd>
+                  {/each}
+                </span>
+                <button
+                  class="shortcut-edit-button"
+                  type="button"
+                  title="Edit DailyNote global shortcut"
+                  aria-label="Edit DailyNote global shortcut"
+                  aria-describedby={globalShortcutMessage
+                    ? "global-shortcut-message"
+                    : undefined}
+                  disabled={isSavingGlobalShortcut}
+                  onclick={startRecording}
+                >
+                  <Pencil size={13} strokeWidth={2.2} aria-hidden="true" />
+                  Edit
+                </button>
+              {/if}
+            </div>
+          </div>
+        </div>
+        {#if globalShortcutMessage}
+          <p id="global-shortcut-message" class="shortcut-message">
+            {globalShortcutMessage}
+          </p>
+        {/if}
+      </section>
+
       {#each shortcutGroups as group (group.title)}
         <section class="shortcut-group">
           <h3>{group.title}</h3>
@@ -237,6 +405,90 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 5px;
+  }
+
+  .editable-shortcut-row {
+    align-items: center;
+  }
+
+  .editable-shortcut-controls {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .editable-shortcut-keys {
+    flex-wrap: nowrap;
+  }
+
+  .shortcut-edit-button {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    gap: 5px;
+    padding: 0 9px;
+    border: 1px solid #2e332a;
+    border-radius: 6px;
+    background: #2e332a;
+    color: #fffdf8;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .shortcut-edit-button:hover,
+  .shortcut-edit-button:focus-visible {
+    border-color: #22271f;
+    background: #22271f;
+    color: #fffdf8;
+  }
+
+  .shortcut-edit-button:disabled {
+    cursor: default;
+    opacity: 0.72;
+  }
+
+  .recording-target {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    padding: 0 10px;
+    border: 1px solid rgba(111, 143, 78, 0.42);
+    border-radius: 6px;
+    background: rgba(111, 143, 78, 0.1);
+    color: #354822;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .cancel-recording-button {
+    display: inline-flex;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(43, 41, 36, 0.16);
+    border-radius: 6px;
+    background: transparent;
+    color: #4a4438;
+  }
+
+  .cancel-recording-button:hover,
+  .cancel-recording-button:focus-visible {
+    border-color: rgba(43, 41, 36, 0.24);
+    background: rgba(43, 41, 36, 0.08);
+    color: #20211f;
+  }
+
+  .shortcut-message {
+    margin: -2px 0 0;
+    color: #9a3f2f;
+    font-size: 0.78rem;
+    line-height: 1.3;
   }
 
   kbd {

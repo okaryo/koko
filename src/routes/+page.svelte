@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
+  import Keyboard from "@lucide/svelte/icons/keyboard";
   import {
     getDailyNote,
     getDailyNoteNavigation,
@@ -289,6 +290,18 @@
       <StickyNotesPanel />
     </aside>
   </div>
+
+  <button
+    class="keyboard-shortcuts-button"
+    type="button"
+    title="Keyboard shortcuts"
+    aria-label="Keyboard shortcuts"
+    onclick={() => {
+      keyboardShortcutsOpen = true;
+    }}
+  >
+    <Keyboard size={16} strokeWidth={2.2} aria-hidden="true" />
+  </button>
 </main>
 
 <KeyboardShortcutsDialog
@@ -361,6 +374,7 @@
   }
 
   .app-shell {
+    position: relative;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -385,5 +399,37 @@
     flex-direction: column;
     gap: 0.8rem;
     overflow: hidden;
+  }
+
+  .keyboard-shortcuts-button {
+    position: absolute;
+    bottom: 1.2rem;
+    right: 0;
+    z-index: 5;
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-color: rgba(43, 41, 36, 0.14);
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
+    background: rgba(255, 253, 248, 0.88);
+    color: #4a4438;
+    box-shadow: 0 6px 20px rgba(43, 41, 36, 0.12);
+    transform: translateX(24px);
+    transition:
+      background 120ms ease,
+      color 120ms ease,
+      transform 140ms ease;
+  }
+
+  .keyboard-shortcuts-button:hover,
+  .keyboard-shortcuts-button:focus-visible {
+    background: #fffdf8;
+    color: #20211f;
+    transform: translateX(0);
   }
 </style>

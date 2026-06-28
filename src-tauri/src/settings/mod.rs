@@ -1,3 +1,3 @@
 pub mod commands;
-mod model;
-mod service;
+pub(crate) mod model;
+pub(crate) mod service;

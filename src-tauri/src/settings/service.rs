@@ -84,6 +84,9 @@ mod tests {
     fn saves_and_loads_settings() {
         let path = temporary_settings_path("save");
         let settings = AppSettings {
+            global_shortcut: super::super::model::GlobalShortcutSettings {
+                daily_note_focus: "CommandOrControl+Shift+J".to_string(),
+            },
             pomodoro: super::super::model::PomodoroSettings {
                 focus_duration_minutes: 45,
                 focus_volume: 12,
