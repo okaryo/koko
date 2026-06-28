@@ -1,5 +1,7 @@
 mod daily_note;
 mod db;
+#[cfg(desktop)]
+mod global_shortcut;
 mod settings;
 mod sticky_note;
 
@@ -10,6 +12,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             db::init(app.handle()).map_err(std::io::Error::other)?;
+
+            #[cfg(desktop)]
+            {
+                app.handle()
+                    .plugin(tauri_plugin_global_shortcut::Builder::new().build())?;
+                global_shortcut::setup_global_shortcuts(app.handle())?;
+            }
 
             Ok(())
         })

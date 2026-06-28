@@ -23,6 +23,7 @@
     {
       title: "DailyNote",
       shortcuts: [
+        { action: "Focus editor globally", keys: ["Cmd", "Shift", "L"] },
         { action: "Focus editor", keys: ["Cmd", "Shift", "N"] },
         { action: "Copy note", keys: ["Cmd", "Shift", "C"] },
         { action: "Insert timestamp", keys: ["Ctrl", "T"] },

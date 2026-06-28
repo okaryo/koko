@@ -7,6 +7,7 @@
   import CircleAlert from "@lucide/svelte/icons/circle-alert";
   import Copy from "@lucide/svelte/icons/copy";
   import LoaderCircle from "@lucide/svelte/icons/loader-circle";
+  import { listen, type UnlistenFn } from "@tauri-apps/api/event";
   import type { Editor } from "@tiptap/core";
   import type {} from "@tiptap/markdown";
   import { formatLocalTime } from "$lib/date";
@@ -52,6 +53,8 @@
   let applyingExternalContent = false;
   let copyStatus = $state<"idle" | "copied" | "error">("idle");
   let copyStatusTimeout: ReturnType<typeof setTimeout> | null = null;
+  let unlistenDailyNoteFocus: UnlistenFn | null = null;
+  let pendingGlobalFocus = false;
 
   onMount(() => {
     let isMounted = true;
@@ -115,12 +118,33 @@
           onBodyChange(updatedEditor.getHTML());
         },
       });
+
+      if (pendingGlobalFocus) {
+        focusEditor();
+      }
     }
 
     void createEditor();
 
+    listen("daily-note:focus", () => {
+      focusEditor();
+    })
+      .then((unlisten) => {
+        if (!isMounted) {
+          unlisten();
+          return;
+        }
+
+        unlistenDailyNoteFocus = unlisten;
+      })
+      .catch((error) => {
+        console.warn("DailyNote global focus listener setup failed", error);
+      });
+
     return () => {
       isMounted = false;
+      unlistenDailyNoteFocus?.();
+      unlistenDailyNoteFocus = null;
     };
   });
 
@@ -167,7 +191,13 @@
   }
 
   function focusEditor() {
-    editor?.commands.focus();
+    if (!editor) {
+      pendingGlobalFocus = true;
+      return;
+    }
+
+    pendingGlobalFocus = false;
+    editor.commands.focus();
   }
 
   function insertTimestamp() {
