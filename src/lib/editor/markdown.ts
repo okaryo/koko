@@ -4,6 +4,30 @@ export function markdownFromTiptapJson(doc: JSONContent) {
   return renderBlock(doc, 0).trimEnd();
 }
 
+export function looksLikeMarkdown(text: string) {
+  const trimmedText = text.trim();
+
+  if (!trimmedText) {
+    return false;
+  }
+
+  return markdownPatterns.some((pattern) => pattern.test(trimmedText));
+}
+
+const markdownPatterns = [
+  /^#{1,6}\s+\S/m,
+  /^(?:[-+*])\s+\S/m,
+  /^(?:[-+*])\s+\[[ xX]\]\s+\S/m,
+  /^\d+[.)]\s+\S/m,
+  /^>\s+\S/m,
+  /^```[\s\S]*```$/m,
+  /^~~~[\s\S]*~~~$/m,
+  /^(?:-{3,}|\*{3,}|_{3,})$/m,
+  /(?:^|\s)(?:\*\*|__)\S[\s\S]*?\S(?:\*\*|__)(?:\s|$)/,
+  /\[[^\]]+\]\([^)]+\)/,
+  /(?:^|\s)`[^`\n]+`(?:\s|$)/,
+];
+
 function renderBlock(node: JSONContent, depth: number): string {
   switch (node.type) {
     case "doc":

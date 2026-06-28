@@ -8,8 +8,12 @@
   import Copy from "@lucide/svelte/icons/copy";
   import LoaderCircle from "@lucide/svelte/icons/loader-circle";
   import type { Editor } from "@tiptap/core";
+  import type {} from "@tiptap/markdown";
   import { formatLocalTime } from "$lib/date";
-  import { markdownFromTiptapJson } from "$lib/editor/markdown";
+  import {
+    looksLikeMarkdown,
+    markdownFromTiptapJson,
+  } from "$lib/editor/markdown";
   import { dailyNoteCommandFromKeydown, isEditableTarget } from "$lib/keyboard";
 
   type Props = {
@@ -60,10 +64,16 @@
         { Editor },
         { default: StarterKit },
         { default: Placeholder },
+        { Markdown },
+        { default: TaskList },
+        { default: TaskItem },
       ] = await Promise.all([
         import("@tiptap/core"),
         import("@tiptap/starter-kit"),
         import("@tiptap/extension-placeholder"),
+        import("@tiptap/markdown"),
+        import("@tiptap/extension-task-list"),
+        import("@tiptap/extension-task-item"),
       ]);
 
       if (!isMounted || !editorElement) {
@@ -75,6 +85,11 @@
         content: bodyHtml,
         extensions: [
           StarterKit,
+          TaskList,
+          TaskItem.configure({
+            nested: true,
+          }),
+          Markdown,
           Placeholder.configure({
             placeholder: "Start writing...",
           }),
@@ -88,6 +103,7 @@
             class: "daily-note-editor",
             spellcheck: "false",
           },
+          handlePaste: (_view, event) => handleEditorPaste(event),
         },
         onUpdate: ({ editor: updatedEditor }) => {
           if (applyingExternalContent) {
@@ -156,6 +172,33 @@
     const timestamp = formatLocalTime(new Date());
 
     editor?.chain().focus().insertContent(timestamp).run();
+  }
+
+  function handleEditorPaste(event: ClipboardEvent) {
+    const clipboardData = event.clipboardData;
+
+    if (!editor || !clipboardData) {
+      return false;
+    }
+
+    if (clipboardData.getData("text/html").trim()) {
+      return false;
+    }
+
+    const text = clipboardData.getData("text/plain");
+
+    if (!looksLikeMarkdown(text)) {
+      return false;
+    }
+
+    event.preventDefault();
+    editor
+      .chain()
+      .focus()
+      .insertContent(text, { contentType: "markdown" })
+      .run();
+
+    return true;
   }
 
   async function copyDailyNoteMarkdown() {
@@ -560,12 +603,31 @@
 
   :global(.daily-note-editor ul),
   :global(.daily-note-editor ol) {
-    margin: 0 0 0.76rem;
+    margin: 0;
     padding-left: 1.4rem;
   }
 
   :global(.daily-note-editor li) {
-    margin: 0.18rem 0;
+    margin: 0;
+  }
+
+  :global(.daily-note-editor li + li) {
+    margin-top: 0.24rem;
+  }
+
+  :global(.daily-note-editor li > ul),
+  :global(.daily-note-editor li > ol),
+  :global(.daily-note-editor li > div > ul),
+  :global(.daily-note-editor li > div > ol) {
+    margin-top: 0.24rem;
+  }
+
+  :global(.daily-note-editor li > p) {
+    margin: 0;
+  }
+
+  :global(.daily-note-editor :is(ul, ol) + :not(ul, ol)) {
+    margin-top: 0.76rem;
   }
 
   :global(.daily-note-editor blockquote) {
@@ -609,20 +671,110 @@
     padding-left: 0;
   }
 
-  :global(.daily-note-editor li[data-type="taskItem"]) {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  :global(.daily-note-editor li[data-type="taskItem"] > label) {
+  :global(.daily-note-editor ul[data-type="taskList"] > li[data-checked]) {
     display: flex;
     align-items: flex-start;
-    padding-top: 0.1rem;
+    gap: 0.45rem;
   }
 
-  :global(.daily-note-editor li[data-type="taskItem"] > div) {
+  :global(
+    .daily-note-editor ul[data-type="taskList"] > li[data-checked] > label
+  ) {
+    position: relative;
+    display: inline-flex;
+    width: 18px;
+    height: 1.62em;
+    flex: 0 0 18px;
+    align-items: center;
+    justify-content: center;
+    padding-top: 0;
+    cursor: pointer;
+  }
+
+  :global(
+    .daily-note-editor
+      ul[data-type="taskList"]
+      > li[data-checked]
+      > label
+      > input
+  ) {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  :global(
+    .daily-note-editor
+      ul[data-type="taskList"]
+      > li[data-checked]
+      > label
+      > span
+  ) {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #8d9484;
+    border-radius: 4px;
+    background: #fffdf8;
+  }
+
+  :global(
+    .daily-note-editor
+      ul[data-type="taskList"]
+      > li[data-checked]
+      > label
+      > input:checked
+      + span
+  ) {
+    border-color: #2563eb;
+    background: #2563eb;
+  }
+
+  :global(
+    .daily-note-editor
+      ul[data-type="taskList"]
+      > li[data-checked]
+      > label
+      > input:checked
+      + span::after
+  ) {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 7px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -58%) rotate(45deg);
+  }
+
+  :global(
+    .daily-note-editor
+      ul[data-type="taskList"]
+      > li[data-checked]
+      > label
+      > input:focus-visible
+      + span
+  ) {
+    outline: 2px solid rgba(37, 99, 235, 0.35);
+    outline-offset: 2px;
+  }
+
+  :global(
+    .daily-note-editor ul[data-type="taskList"] > li[data-checked] > div
+  ) {
     flex: 1;
     min-width: 0;
+  }
+
+  :global(
+    .daily-note-editor ul[data-type="taskList"] > li[data-checked] > div > p
+  ) {
+    margin: 0;
   }
 
   :global(.daily-note-editor .is-editor-empty:first-child::before) {

@@ -96,6 +96,7 @@ Daily workspace decisions:
 - `Ctrl+T`: insert `HH:mm` at the current DailyNote cursor position.
 - Tiptap handles normal list continuation for `- ` and `1. ` input.
 - `- [ ] ` and `- [x] ` create checkbox items in the DailyNote editor.
+- Pasted Markdown-like plain text is inserted as formatted DailyNote content.
 - The DailyNote header shows an animated saving icon, a temporary saved icon, or `Save failed` for local persistence state.
 
 ---
