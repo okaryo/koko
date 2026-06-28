@@ -594,6 +594,40 @@
     font-size: 1rem;
   }
 
+  :global(.daily-note-editor h1::before),
+  :global(.daily-note-editor h2::before),
+  :global(.daily-note-editor h3::before),
+  :global(.daily-note-editor h4::before),
+  :global(.daily-note-editor h5::before),
+  :global(.daily-note-editor h6::before) {
+    color: #7b766b;
+    font-weight: 650;
+  }
+
+  :global(.daily-note-editor h1::before) {
+    content: "# ";
+  }
+
+  :global(.daily-note-editor h2::before) {
+    content: "## ";
+  }
+
+  :global(.daily-note-editor h3::before) {
+    content: "### ";
+  }
+
+  :global(.daily-note-editor h4::before) {
+    content: "#### ";
+  }
+
+  :global(.daily-note-editor h5::before) {
+    content: "##### ";
+  }
+
+  :global(.daily-note-editor h6::before) {
+    content: "###### ";
+  }
+
   :global(.daily-note-editor h1:first-child),
   :global(.daily-note-editor h2:first-child),
   :global(.daily-note-editor h3:first-child),
