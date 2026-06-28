@@ -2,9 +2,10 @@
 
 koko is a simple desktop app for staying with the work in front of you.
 
-It is the successor to Current. Current separated `Todo` and `Log` into
-different surfaces. koko intentionally removes that split: the main workspace is
-a DailyNote for the day, supported by Sticky Notes and a Pomodoro timer.
+It is the successor to [Current](https://github.com/okaryo/current). Current
+separated `Todo` and `Log` into different surfaces. koko intentionally removes
+that split: the main workspace is a DailyNote for the day, supported by Sticky
+Notes and a Pomodoro timer.
 
 ## Philosophy
 
@@ -21,7 +22,6 @@ timer, and as little app-shaped ceremony as possible.
 ## Main Features
 
 - DailyNote workspace
-- User-triggered start of today's note
 - Sticky Notes for date-independent notes
 - Pomodoro timer
 - Keyboard-first workflow
@@ -36,9 +36,9 @@ thinking together without choosing a mode. A todo can simply be a checkbox. A
 log can simply be a timestamped paragraph or bullet. koko should not force users
 to classify entries before writing them.
 
-The app should support starting today's note through an explicit user action.
-Automatic date changes may be useful later, but the initial model should avoid
-surprising the user or moving their active writing context without intent.
+The app should keep the active DailyNote stable when the date changes. If a new
+day starts while an older note is active, switching to today's note should be an
+explicit user action.
 
 The editor should be powered by Tiptap. The goal is not a rich document editor;
 it is a comfortable Markdown-like writing surface with predictable keyboard
