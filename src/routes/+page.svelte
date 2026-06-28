@@ -378,7 +378,22 @@
     }
 
     event.preventDefault();
-    keyboardShortcutsOpen = !keyboardShortcutsOpen;
+
+    if (appCommand === "toggleKeyboardHelp") {
+      keyboardShortcutsOpen = !keyboardShortcutsOpen;
+      return;
+    }
+
+    if (keyboardShortcutsOpen) {
+      return;
+    }
+
+    if (appCommand === "goToPreviousDailyNote") {
+      void goToAdjacentDailyNote(dailyNoteNavigation.previousNoteDate);
+      return;
+    }
+
+    void goToAdjacentDailyNote(dailyNoteNavigation.nextNoteDate);
   }
 </script>
 

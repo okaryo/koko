@@ -6,6 +6,8 @@ Use this checklist before reviewing keyboard-related changes.
 
 - [ ] `Cmd+Shift+N` focuses the DailyNote editor.
 - [ ] `Cmd+Shift+C` copies the current DailyNote as Markdown-like text.
+- [ ] `Cmd+Shift+[` moves to the previous DailyNote when one exists.
+- [ ] `Cmd+Shift+]` moves to the next DailyNote when one exists.
 - [ ] `Ctrl+T` inserts the current local time as `HH:mm`.
 - [ ] `Ctrl+T` does not add a trailing space.
 - [ ] `Ctrl+T` does not run while focus is in a sticky note input or other text field.

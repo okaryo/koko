@@ -78,6 +78,36 @@ describe("keyboard shortcuts", () => {
     );
     expect(
       appCommandFromKeydown(
+        keydown({
+          code: "BracketLeft",
+          key: "{",
+          metaKey: true,
+          shiftKey: true,
+        }),
+      ),
+    ).toBe("goToPreviousDailyNote");
+    expect(
+      appCommandFromKeydown(
+        keydown({
+          code: "BracketRight",
+          key: "}",
+          metaKey: true,
+          shiftKey: true,
+        }),
+      ),
+    ).toBe("goToNextDailyNote");
+    expect(
+      appCommandFromKeydown(
+        keydown({ key: "[", metaKey: true, shiftKey: true }),
+      ),
+    ).toBe("goToPreviousDailyNote");
+    expect(
+      appCommandFromKeydown(
+        keydown({ key: "]", metaKey: true, shiftKey: true }),
+      ),
+    ).toBe("goToNextDailyNote");
+    expect(
+      appCommandFromKeydown(
         keydown({ key: "/", metaKey: true, shiftKey: true }),
       ),
     ).toBeNull();

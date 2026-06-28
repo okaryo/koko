@@ -1,6 +1,9 @@
 export type PomodoroCommand = "toggle" | "reset";
 export type DailyNoteCommand = "focus" | "insertTimestamp" | "copyMarkdown";
-export type AppCommand = "toggleKeyboardHelp";
+export type AppCommand =
+  | "toggleKeyboardHelp"
+  | "goToPreviousDailyNote"
+  | "goToNextDailyNote";
 export type StickyNoteCommand = "focusCreate";
 
 export function pomodoroCommandFromKeydown(
@@ -69,6 +72,16 @@ export function stickyNoteCommandFromKeydown(
 }
 
 export function appCommandFromKeydown(event: KeyboardEvent): AppCommand | null {
+  if (event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey) {
+    if (isPreviousBracketKey(event)) {
+      return "goToPreviousDailyNote";
+    }
+
+    if (isNextBracketKey(event)) {
+      return "goToNextDailyNote";
+    }
+  }
+
   if (
     event.metaKey &&
     !event.shiftKey &&
@@ -80,6 +93,16 @@ export function appCommandFromKeydown(event: KeyboardEvent): AppCommand | null {
   }
 
   return null;
+}
+
+function isPreviousBracketKey(event: KeyboardEvent) {
+  return event.code === "BracketLeft" || event.key === "[" || event.key === "{";
+}
+
+function isNextBracketKey(event: KeyboardEvent) {
+  return (
+    event.code === "BracketRight" || event.key === "]" || event.key === "}"
+  );
 }
 
 export function isEditableTarget(target: EventTarget | null) {

@@ -44,6 +44,8 @@
       shortcuts: [
         { action: "Focus editor", keys: ["Cmd", "Shift", "N"] },
         { action: "Copy note", keys: ["Cmd", "Shift", "C"] },
+        { action: "Previous note", keys: ["Cmd", "Shift", "["] },
+        { action: "Next note", keys: ["Cmd", "Shift", "]"] },
         { action: "Insert timestamp", keys: ["Ctrl", "T"] },
         { action: "Toggle checkbox", keys: ["Cmd", "Enter"] },
       ],

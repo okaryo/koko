@@ -93,6 +93,7 @@ Daily workspace decisions:
 - `Today` is disabled while today's DailyNote is active.
 - `Start today's note` appears when today's DailyNote does not exist and creates it after saving the current DailyNote.
 - `Cmd+Shift+N`: focus the DailyNote editor.
+- `Cmd+Shift+[` / `Cmd+Shift+]`: move to the previous or next existing DailyNote.
 - `Ctrl+T`: insert `HH:mm` at the current DailyNote cursor position.
 - `Cmd+Enter`: toggle the current DailyNote checkbox item.
 - Tiptap handles normal list continuation for `- ` and `1. ` input.
@@ -189,6 +190,7 @@ Keyboard decisions:
 - `CommandOrControl+Shift+L`: bring koko to the front and focus the DailyNote editor from outside the app.
 - The global DailyNote focus shortcut uses Current's default key and can be changed from the keyboard shortcuts dialog.
 - A small keyboard icon in the lower-right corner opens the keyboard shortcuts dialog for users who do not know `Cmd+/`.
+- `Cmd+Shift+[` / `Cmd+Shift+]`: move to the previous or next existing DailyNote.
 - `Cmd+Shift+P`: start, pause, or continue Pomodoro.
 - `Cmd+Shift+R`: reset Pomodoro.
 - `Cmd+/`: open or close keyboard shortcut help.
