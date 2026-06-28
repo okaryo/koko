@@ -244,6 +244,7 @@ Testing decisions:
 - [x] Add clear empty state
 - [x] Add calm error states
 - [x] Add copy action for the current DailyNote content
+- [x] Add app icon
 - [x] Verify small desktop window behavior
 - [x] Verify keyboard-only workflow manually
 
@@ -256,13 +257,28 @@ UI decisions:
 
 ---
 
+## Phase 9 - Release And Updater
+
+- [x] Add Tauri updater configuration
+- [x] Add updater and process plugins
+- [x] Generate updater artifacts during bundling
+- [x] Add release workflow
+
+Release decisions:
+
+- Use GitHub Releases as the updater endpoint for `v0.1.0`.
+- Publish updater metadata to `https://github.com/okaryo/koko/releases/latest/download/latest.json`.
+- Follow Current's release workflow shape for the initial koko release.
+- Release builds are triggered by pushing tags matching `v*`.
+- Release artifacts are created as draft GitHub releases.
+
+---
+
 ## Later
 
 - [ ] DailyNote templates
 - [ ] DailyNote history picker
 - [ ] Search DailyNotes
-- [ ] Release workflow
-- [ ] App icon
 
 Later decisions:
 

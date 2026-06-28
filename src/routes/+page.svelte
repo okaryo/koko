@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
+  import { check, type Update } from "@tauri-apps/plugin-updater";
+  import { relaunch } from "@tauri-apps/plugin-process";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
   import Keyboard from "@lucide/svelte/icons/keyboard";
   import {
     getDailyNote,
@@ -17,7 +20,15 @@
   import { appCommandFromKeydown } from "$lib/keyboard";
 
   type DailyNoteSaveStatus = "idle" | "saving" | "saved" | "error";
+  type UpdateState =
+    | "unavailable"
+    | "checking"
+    | "idle"
+    | "available"
+    | "installing"
+    | "error";
 
+  const UPDATE_CHECK_COOLDOWN_MS = 24 * 60 * 60 * 1000;
   let dailyNoteHtml = $state("");
   let activeDailyNote = $state<DailyNote | null>(null);
   let activeNoteDate = $state(formatLocalDate(new Date()));
@@ -32,6 +43,12 @@
   let dateCheckInterval: ReturnType<typeof setInterval> | null = null;
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   let dailyNoteSavedStatusTimeout: ReturnType<typeof setTimeout> | null = null;
+  let updateState = $state<UpdateState>("unavailable");
+  let availableUpdate = $state<Update | null>(null);
+  let updateCheckInterval: ReturnType<typeof setInterval> | null = null;
+  let unlistenUpdateFocusChange: (() => void) | null = null;
+  let updateCheckInFlight = false;
+  let lastUpdateCheckAttemptAt = 0;
   const activeNoteDateLabel = $derived(formatDateLabel(activeNoteDate));
 
   onMount(async () => {
@@ -43,10 +60,12 @@
     dateCheckInterval = setInterval(() => {
       void refreshCurrentDate();
     }, 60_000);
+    startUpdateChecks();
   });
 
   onDestroy(() => {
     stopDateCheck();
+    stopUpdateChecks();
     clearDailyNoteSaveTimeout();
     clearDailyNoteSavedStatusTimeout();
   });
@@ -252,6 +271,102 @@
     dateCheckInterval = null;
   }
 
+  function startUpdateChecks() {
+    if (!isTauriRuntime()) {
+      updateState = "unavailable";
+      return;
+    }
+
+    void checkForUpdates({ force: true });
+    updateCheckInterval = setInterval(() => {
+      void checkForUpdates();
+    }, UPDATE_CHECK_COOLDOWN_MS);
+
+    void getCurrentWindow()
+      .onFocusChanged(({ payload: focused }) => {
+        if (focused) {
+          void checkForUpdates();
+        }
+      })
+      .then((unlisten) => {
+        unlistenUpdateFocusChange = unlisten;
+      })
+      .catch((error) => {
+        console.warn("Update focus listener setup failed", error);
+      });
+  }
+
+  function stopUpdateChecks() {
+    if (updateCheckInterval) {
+      clearInterval(updateCheckInterval);
+      updateCheckInterval = null;
+    }
+
+    unlistenUpdateFocusChange?.();
+    unlistenUpdateFocusChange = null;
+  }
+
+  async function checkForUpdates(options: { force?: boolean } = {}) {
+    if (!isTauriRuntime()) {
+      updateState = "unavailable";
+      return;
+    }
+
+    if (shouldSkipUpdateCheck(options.force ?? false)) {
+      return;
+    }
+
+    updateCheckInFlight = true;
+    lastUpdateCheckAttemptAt = Date.now();
+    updateState = "checking";
+
+    try {
+      const update = await check();
+
+      availableUpdate = update;
+      updateState = update ? "available" : "idle";
+    } catch (error) {
+      console.warn("Update check failed", error);
+      updateState = "error";
+    } finally {
+      updateCheckInFlight = false;
+    }
+  }
+
+  function shouldSkipUpdateCheck(force: boolean) {
+    if (
+      updateCheckInFlight ||
+      updateState === "available" ||
+      updateState === "installing"
+    ) {
+      return true;
+    }
+
+    return (
+      !force && Date.now() - lastUpdateCheckAttemptAt < UPDATE_CHECK_COOLDOWN_MS
+    );
+  }
+
+  async function installUpdate() {
+    if (!availableUpdate) {
+      return;
+    }
+
+    updateState = "installing";
+
+    try {
+      await availableUpdate.downloadAndInstall();
+      await relaunch();
+    } catch (error) {
+      console.warn("Update installation failed", error);
+      updateState = "error";
+    }
+  }
+
+  function isTauriRuntime() {
+    return "__TAURI_INTERNALS__" in window;
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     const appCommand = appCommandFromKeydown(event);
 
@@ -288,6 +403,18 @@
     <aside class="side-panel" aria-label="Sidebar">
       <PomodoroPanel />
       <StickyNotesPanel />
+      {#if updateState === "available" || updateState === "installing"}
+        <button
+          class="update-button"
+          type="button"
+          disabled={updateState === "installing"}
+          onclick={() => void installUpdate()}
+        >
+          {updateState === "installing"
+            ? "Installing update..."
+            : "Install update"}
+        </button>
+      {/if}
     </aside>
   </div>
 
@@ -431,5 +558,20 @@
     background: #fffdf8;
     color: #20211f;
     transform: translateX(0);
+  }
+
+  .update-button {
+    flex: 0 0 auto;
+    width: 100%;
+    border-color: rgba(43, 41, 36, 0.16);
+  }
+
+  .update-button:hover:not(:disabled) {
+    background: #22271f;
+  }
+
+  .update-button:disabled {
+    cursor: wait;
+    opacity: 0.75;
   }
 </style>
