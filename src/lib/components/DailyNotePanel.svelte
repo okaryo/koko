@@ -500,7 +500,7 @@
     padding: 0 10px;
   }
 
-  .start-today-button:hover {
+  .start-today-button:not(:disabled):hover {
     background: #22271f;
     color: #fffdf8;
   }
@@ -512,7 +512,7 @@
   }
 
   .note-navigation .icon-button:hover,
-  .today-button:not(.start-today-button):hover {
+  .today-button:not(.start-today-button):not(:disabled):hover {
     background: rgba(46, 51, 42, 0.08);
     color: #20211f;
   }
