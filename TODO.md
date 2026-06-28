@@ -233,14 +233,14 @@ Testing decisions:
 
 ## Phase 8 - UI Polish
 
-- [ ] Design main app layout
+- [x] Design main app layout
 - [x] Tune typography for long writing sessions
-- [ ] Tune editor and timer contrast
-- [ ] Add clear empty state
-- [ ] Add calm error states
+- [x] Tune editor and timer contrast
+- [x] Add clear empty state
+- [x] Add calm error states
 - [x] Add copy action for the current DailyNote content
-- [ ] Verify small desktop window behavior
-- [ ] Verify keyboard-only workflow manually
+- [x] Verify small desktop window behavior
+- [x] Verify keyboard-only workflow manually
 
 UI decisions:
 
@@ -254,11 +254,8 @@ UI decisions:
 ## Later
 
 - [ ] DailyNote templates
-- [ ] Browse previous DailyNotes
+- [ ] DailyNote history picker
 - [ ] Search DailyNotes
-- [ ] Current data import
-- [ ] Export DailyNotes
-- [ ] System tray or menu bar timer
 - [ ] Release workflow
 - [ ] App icon
 
