@@ -13,6 +13,7 @@
     unpinStickyNote as unpinPersistedStickyNote,
     updateStickyNoteBody,
   } from "$lib/api/stickyNotes";
+  import { insertMarkdownListContinuation } from "$lib/editor/textareaMarkdown";
   import { stickyNoteCommandFromKeydown } from "$lib/keyboard";
   import { disableAutocorrect } from "$lib/textAssist";
 
@@ -192,6 +193,10 @@
       return;
     }
 
+    if (continueMarkdownList(event)) {
+      return;
+    }
+
     if (event.key === "Escape") {
       event.preventDefault();
       discardComposer();
@@ -202,6 +207,10 @@
     if (isSaveShortcut(event)) {
       event.preventDefault();
       void saveEditingStickyNote();
+      return;
+    }
+
+    if (continueMarkdownList(event)) {
       return;
     }
 
@@ -231,6 +240,37 @@
       !event.altKey &&
       event.key === "Enter"
     );
+  }
+
+  function continueMarkdownList(event: KeyboardEvent) {
+    if (
+      event.key !== "Enter" ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      !(event.currentTarget instanceof HTMLTextAreaElement)
+    ) {
+      return false;
+    }
+
+    const textarea = event.currentTarget;
+    const edit = insertMarkdownListContinuation(
+      textarea.value,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+    );
+
+    if (edit === null) {
+      return false;
+    }
+
+    event.preventDefault();
+    textarea.value = edit.value;
+    textarea.setSelectionRange(edit.selectionStart, edit.selectionEnd);
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+
+    return true;
   }
 
   function autoResizeTextarea(textarea: HTMLTextAreaElement) {
