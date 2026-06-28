@@ -27,6 +27,42 @@ timer, and as little app-shaped ceremony as possible.
 - Keyboard-first workflow
 - Local-first SQLite storage
 
+## Installation
+
+koko is distributed for macOS, Windows, and Linux.
+
+### Manual Installation
+
+1. Open the [latest release on GitHub](https://github.com/okaryo/koko/releases/latest).
+2. Download the installer for your OS:
+   - macOS Apple Silicon: the file ending in `_aarch64.dmg`
+   - macOS Intel: the file ending in `_x64.dmg`
+   - Windows: the `.exe` or `.msi` installer
+   - Linux: the `.deb` package or `.AppImage`
+3. Install or run koko:
+   - macOS: open the downloaded DMG and move koko to your Applications folder.
+   - Windows: run the downloaded installer.
+   - Linux `.deb`: install it with your package manager.
+   - Linux `.AppImage`: make it executable, then run it.
+4. Start koko from your applications menu or launcher.
+
+koko is not notarized with Apple Developer ID. If macOS says koko is damaged and
+can't be opened, run the following command after moving koko to Applications:
+
+```sh
+xattr -cr /Applications/koko.app
+```
+
+Then open koko again. This removes the quarantine attributes that macOS applies to
+downloaded apps.
+
+Windows installers are not code-signed yet, so Windows may show a SmartScreen warning.
+
+The `app.tar.gz`, `.sig`, and `latest.json` assets are used by the in-app updater and are
+not needed for manual installation.
+
+Homebrew tap installation is not available yet.
+
 ## DailyNote Workspace
 
 The DailyNote is the primary surface of the app.
