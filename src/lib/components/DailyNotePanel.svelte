@@ -476,9 +476,13 @@
   }
 
   .note-navigation .icon-button {
+    display: inline-flex;
     width: 30px;
     min-width: 30px;
+    align-items: center;
+    justify-content: center;
     padding: 0;
+    line-height: 1;
   }
 
   .today-button {
