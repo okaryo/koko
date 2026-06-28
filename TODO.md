@@ -94,6 +94,7 @@ Daily workspace decisions:
 - `Start today's note` appears when today's DailyNote does not exist and creates it after saving the current DailyNote.
 - `Cmd+Shift+N`: focus the DailyNote editor.
 - `Ctrl+T`: insert `HH:mm` at the current DailyNote cursor position.
+- `Cmd+Enter`: toggle the current DailyNote checkbox item.
 - Tiptap handles normal list continuation for `- ` and `1. ` input.
 - `- [ ] ` and `- [x] ` create checkbox items in the DailyNote editor.
 - Pasted Markdown-like plain text is inserted as formatted DailyNote content.

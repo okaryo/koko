@@ -14,6 +14,7 @@
     looksLikeMarkdown,
     markdownFromTiptapJson,
   } from "$lib/editor/markdown";
+  import { createTaskItemKeyboard } from "$lib/editor/taskItemKeyboard";
   import { dailyNoteCommandFromKeydown, isEditableTarget } from "$lib/keyboard";
 
   type Props = {
@@ -61,7 +62,7 @@
       }
 
       const [
-        { Editor },
+        { Editor, Extension },
         { default: StarterKit },
         { default: Placeholder },
         { Markdown },
@@ -89,6 +90,7 @@
           TaskItem.configure({
             nested: true,
           }),
+          createTaskItemKeyboard(Extension),
           Markdown,
           Placeholder.configure({
             placeholder: "Start writing...",
