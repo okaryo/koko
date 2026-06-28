@@ -50,6 +50,9 @@
   let updateCheckInFlight = false;
   let lastUpdateCheckAttemptAt = 0;
   const activeNoteDateLabel = $derived(formatDateLabel(activeNoteDate));
+  const dailyNotePanelKey = $derived(
+    activeDailyNote ? `daily-note:${activeDailyNote.id}` : activeNoteDate,
+  );
 
   onMount(async () => {
     activeDailyNote = await loadDailyNote(activeNoteDate);
@@ -383,22 +386,24 @@
 
 <main class="app-shell" aria-label="koko workspace">
   <div class="workspace">
-    <DailyNotePanel
-      bodyHtml={dailyNoteHtml}
-      dateLabel={activeNoteDateLabel}
-      isToday={activeNoteDate === currentDate}
-      nextNoteDate={dailyNoteNavigation.nextNoteDate}
-      previousNoteDate={dailyNoteNavigation.previousNoteDate}
-      saveStatus={dailyNoteSaveStatus}
-      {todayDailyNoteExists}
-      onBodyChange={handleDailyNoteBodyChange}
-      onGoToNextNote={() =>
-        void goToAdjacentDailyNote(dailyNoteNavigation.nextNoteDate)}
-      onGoToPreviousNote={() =>
-        void goToAdjacentDailyNote(dailyNoteNavigation.previousNoteDate)}
-      onGoToTodayNote={goToExistingTodayNote}
-      onStartTodayNote={startTodayNote}
-    />
+    {#key dailyNotePanelKey}
+      <DailyNotePanel
+        bodyHtml={dailyNoteHtml}
+        dateLabel={activeNoteDateLabel}
+        isToday={activeNoteDate === currentDate}
+        nextNoteDate={dailyNoteNavigation.nextNoteDate}
+        previousNoteDate={dailyNoteNavigation.previousNoteDate}
+        saveStatus={dailyNoteSaveStatus}
+        {todayDailyNoteExists}
+        onBodyChange={handleDailyNoteBodyChange}
+        onGoToNextNote={() =>
+          void goToAdjacentDailyNote(dailyNoteNavigation.nextNoteDate)}
+        onGoToPreviousNote={() =>
+          void goToAdjacentDailyNote(dailyNoteNavigation.previousNoteDate)}
+        onGoToTodayNote={goToExistingTodayNote}
+        onStartTodayNote={startTodayNote}
+      />
+    {/key}
 
     <aside class="side-panel" aria-label="Sidebar">
       <PomodoroPanel />

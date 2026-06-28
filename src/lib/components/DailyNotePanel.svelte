@@ -54,7 +54,6 @@
   let copyStatus = $state<"idle" | "copied" | "error">("idle");
   let copyStatusTimeout: ReturnType<typeof setTimeout> | null = null;
   let unlistenDailyNoteFocus: UnlistenFn | null = null;
-  let pendingGlobalFocus = false;
 
   onMount(() => {
     let isMounted = true;
@@ -119,9 +118,7 @@
         },
       });
 
-      if (pendingGlobalFocus) {
-        focusEditor();
-      }
+      focusEditorAtStart();
     }
 
     void createEditor();
@@ -192,12 +189,18 @@
 
   function focusEditor() {
     if (!editor) {
-      pendingGlobalFocus = true;
       return;
     }
 
-    pendingGlobalFocus = false;
     editor.commands.focus();
+  }
+
+  function focusEditorAtStart() {
+    if (!editor) {
+      return;
+    }
+
+    editor.commands.focus("start", { scrollIntoView: false });
   }
 
   function insertTimestamp() {
