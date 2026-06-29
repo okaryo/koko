@@ -16,7 +16,8 @@
         "width": 860,
         "height": 720,
         "minWidth": 860,
-        "minHeight": 630
+        "minHeight": 630,
+        "theme": "Light"
       }
     ],
     "security": {
