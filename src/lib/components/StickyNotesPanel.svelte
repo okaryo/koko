@@ -187,6 +187,10 @@
   }
 
   function handleComposerKeydown(event: KeyboardEvent) {
+    if (isTextCompositionKeydown(event)) {
+      return;
+    }
+
     if (isSaveShortcut(event)) {
       event.preventDefault();
       void createStickyNote();
@@ -204,6 +208,10 @@
   }
 
   function handleEditKeydown(event: KeyboardEvent) {
+    if (isTextCompositionKeydown(event)) {
+      return;
+    }
+
     if (isSaveShortcut(event)) {
       event.preventDefault();
       void saveEditingStickyNote();
@@ -239,6 +247,12 @@
       !event.ctrlKey &&
       !event.altKey &&
       event.key === "Enter"
+    );
+  }
+
+  function isTextCompositionKeydown(event: KeyboardEvent) {
+    return (
+      event.isComposing || event.key === "Process" || event.keyCode === 229
     );
   }
 
