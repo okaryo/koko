@@ -1,0 +1,14 @@
+.os-theme-koko {
+  --os-size: 10px;
+  --os-padding-perpendicular: 2px;
+  --os-padding-axis: 4px;
+  --os-track-bg: transparent;
+  --os-track-bg-hover: rgba(43, 41, 36, 0.05);
+  --os-track-bg-active: rgba(43, 41, 36, 0.08);
+  --os-track-border-radius: 999px;
+  --os-handle-bg: rgba(74, 68, 56, 0.24);
+  --os-handle-bg-hover: rgba(74, 68, 56, 0.36);
+  --os-handle-bg-active: rgba(74, 68, 56, 0.48);
+  --os-handle-border-radius: 999px;
+  --os-handle-min-size: 48px;
+}

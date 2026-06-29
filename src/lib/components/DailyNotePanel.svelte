@@ -15,6 +15,7 @@
     looksLikeMarkdown,
     markdownFromTiptapJson,
   } from "$lib/editor/markdown";
+  import { overlayScrollbars } from "$lib/actions/overlayScrollbars";
   import { createTaskItemKeyboard } from "$lib/editor/taskItemKeyboard";
   import { dailyNoteCommandFromKeydown, isEditableTarget } from "$lib/keyboard";
 
@@ -395,7 +396,13 @@
     </div>
   </header>
 
-  <div class="daily-note" bind:this={editorElement}></div>
+  <div
+    class="daily-note"
+    data-overlayscrollbars-initialize
+    use:overlayScrollbars={{ viewport: editorElement }}
+  >
+    <div class="daily-note-editor-host" bind:this={editorElement}></div>
+  </div>
 </section>
 
 <style>
@@ -582,6 +589,10 @@
     border: 1px solid rgba(43, 41, 36, 0.12);
     border-radius: 6px;
     background: #fffdf8;
+  }
+
+  .daily-note-editor-host {
+    min-height: 100%;
   }
 
   :global(.daily-note-editor) {

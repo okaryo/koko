@@ -13,6 +13,7 @@
     unpinStickyNote as unpinPersistedStickyNote,
     updateStickyNoteBody,
   } from "$lib/api/stickyNotes";
+  import { overlayScrollbars } from "$lib/actions/overlayScrollbars";
   import { insertMarkdownListContinuation } from "$lib/editor/textareaMarkdown";
   import { stickyNoteCommandFromKeydown } from "$lib/keyboard";
   import { disableAutocorrect } from "$lib/textAssist";
@@ -20,6 +21,7 @@
   let stickyNotes = $state<StickyNote[]>([]);
   let newStickyNoteBody = $state("");
   let newStickyNoteTextareaElement = $state<HTMLTextAreaElement>();
+  let stickyNotesViewportElement = $state<HTMLDivElement>();
   let composerOpen = $state(false);
   let editingStickyNoteId = $state<number | null>(null);
   let editingStickyNoteBody = $state("");
@@ -307,117 +309,124 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section class="sticky-notes-panel" aria-label="Sticky Notes">
-  <header class="panel-header">
-    <h2>Sticky Notes</h2>
-    <button
-      class="icon-button add-sticky-note-button"
-      type="button"
-      aria-label="Create sticky note"
-      title="Create sticky note"
-      onclick={() => void openComposer()}
-    >
-      <Plus size={16} strokeWidth={2.2} aria-hidden="true" />
-    </button>
-  </header>
+<section
+  class="sticky-notes-panel"
+  aria-label="Sticky Notes"
+  data-overlayscrollbars-initialize
+  use:overlayScrollbars={{ viewport: stickyNotesViewportElement }}
+>
+  <div class="sticky-notes-viewport" bind:this={stickyNotesViewportElement}>
+    <header class="panel-header">
+      <h2>Sticky Notes</h2>
+      <button
+        class="icon-button add-sticky-note-button"
+        type="button"
+        aria-label="Create sticky note"
+        title="Create sticky note"
+        onclick={() => void openComposer()}
+      >
+        <Plus size={16} strokeWidth={2.2} aria-hidden="true" />
+      </button>
+    </header>
 
-  {#if composerOpen}
-    <div class="sticky-note sticky-note-composer">
-      <textarea
-        bind:this={newStickyNoteTextareaElement}
-        bind:value={newStickyNoteBody}
-        rows="3"
-        use:disableAutocorrect
-        autocapitalize="off"
-        autocomplete="off"
-        placeholder="Add a note..."
-        spellcheck="false"
-        aria-label="New sticky note"
-        use:autoResizeTextarea
-        onkeydown={handleComposerKeydown}
-        onblur={() => void createStickyNote()}></textarea>
-    </div>
-  {/if}
-
-  <div class="sticky-note-list" aria-label="Active sticky notes">
-    {#if stickyNotes.length === 0 && !composerOpen}
-      <p class="empty-state">No notes.</p>
-    {:else}
-      {#each stickyNotes as stickyNote (stickyNote.id)}
-        <div
-          id={`sticky-note-${stickyNote.id}`}
-          class={`sticky-note ${
-            editingStickyNoteId !== stickyNote.id ? "sticky-note-display" : ""
-          } ${stickyNote.pinnedAtMs !== null ? "sticky-note-pinned" : ""}`}
-        >
-          {#if editingStickyNoteId === stickyNote.id}
-            <textarea
-              data-sticky-note-edit-id={stickyNote.id}
-              bind:value={editingStickyNoteBody}
-              rows="3"
-              use:disableAutocorrect
-              autocapitalize="off"
-              autocomplete="off"
-              spellcheck="false"
-              aria-label="Edit sticky note"
-              use:autoResizeTextarea
-              onclick={(event) => event.stopPropagation()}
-              onkeydown={handleEditKeydown}
-              onblur={() => void saveEditingStickyNote()}></textarea>
-          {:else}
-            <div
-              class="sticky-note-edit-button"
-              aria-label="Edit sticky note"
-              role="button"
-              tabindex="0"
-              onclick={() => startEditingStickyNote(stickyNote)}
-              onkeydown={(event) =>
-                handleStickyNoteEditTargetKeydown(event, stickyNote)}
-            >
-              <p>{stickyNote.body}</p>
-            </div>
-            <div class="sticky-note-actions">
-              <button
-                class={`icon-button sticky-note-action-button ${
-                  stickyNote.pinnedAtMs !== null
-                    ? "sticky-note-action-button-active"
-                    : ""
-                }`}
-                type="button"
-                aria-label={stickyNote.pinnedAtMs === null
-                  ? "Pin sticky note"
-                  : "Unpin sticky note"}
-                title={stickyNote.pinnedAtMs === null
-                  ? "Pin sticky note"
-                  : "Unpin sticky note"}
-                onclick={(event) => {
-                  event.stopPropagation();
-                  void toggleStickyNotePin(stickyNote);
-                }}
-              >
-                {#if stickyNote.pinnedAtMs === null}
-                  <PinIcon size={14} strokeWidth={2.2} aria-hidden="true" />
-                {:else}
-                  <PinOff size={14} strokeWidth={2.2} aria-hidden="true" />
-                {/if}
-              </button>
-              <button
-                class="icon-button sticky-note-action-button"
-                type="button"
-                aria-label="Archive sticky note"
-                title="Archive sticky note"
-                onclick={(event) => {
-                  event.stopPropagation();
-                  void archiveStickyNote(stickyNote.id);
-                }}
-              >
-                <Archive size={14} strokeWidth={2.2} aria-hidden="true" />
-              </button>
-            </div>
-          {/if}
-        </div>
-      {/each}
+    {#if composerOpen}
+      <div class="sticky-note sticky-note-composer">
+        <textarea
+          bind:this={newStickyNoteTextareaElement}
+          bind:value={newStickyNoteBody}
+          rows="3"
+          use:disableAutocorrect
+          autocapitalize="off"
+          autocomplete="off"
+          placeholder="Add a note..."
+          spellcheck="false"
+          aria-label="New sticky note"
+          use:autoResizeTextarea
+          onkeydown={handleComposerKeydown}
+          onblur={() => void createStickyNote()}></textarea>
+      </div>
     {/if}
+
+    <div class="sticky-note-list" aria-label="Active sticky notes">
+      {#if stickyNotes.length === 0 && !composerOpen}
+        <p class="empty-state">No notes.</p>
+      {:else}
+        {#each stickyNotes as stickyNote (stickyNote.id)}
+          <div
+            id={`sticky-note-${stickyNote.id}`}
+            class={`sticky-note ${
+              editingStickyNoteId !== stickyNote.id ? "sticky-note-display" : ""
+            } ${stickyNote.pinnedAtMs !== null ? "sticky-note-pinned" : ""}`}
+          >
+            {#if editingStickyNoteId === stickyNote.id}
+              <textarea
+                data-sticky-note-edit-id={stickyNote.id}
+                bind:value={editingStickyNoteBody}
+                rows="3"
+                use:disableAutocorrect
+                autocapitalize="off"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Edit sticky note"
+                use:autoResizeTextarea
+                onclick={(event) => event.stopPropagation()}
+                onkeydown={handleEditKeydown}
+                onblur={() => void saveEditingStickyNote()}></textarea>
+            {:else}
+              <div
+                class="sticky-note-edit-button"
+                aria-label="Edit sticky note"
+                role="button"
+                tabindex="0"
+                onclick={() => startEditingStickyNote(stickyNote)}
+                onkeydown={(event) =>
+                  handleStickyNoteEditTargetKeydown(event, stickyNote)}
+              >
+                <p>{stickyNote.body}</p>
+              </div>
+              <div class="sticky-note-actions">
+                <button
+                  class={`icon-button sticky-note-action-button ${
+                    stickyNote.pinnedAtMs !== null
+                      ? "sticky-note-action-button-active"
+                      : ""
+                  }`}
+                  type="button"
+                  aria-label={stickyNote.pinnedAtMs === null
+                    ? "Pin sticky note"
+                    : "Unpin sticky note"}
+                  title={stickyNote.pinnedAtMs === null
+                    ? "Pin sticky note"
+                    : "Unpin sticky note"}
+                  onclick={(event) => {
+                    event.stopPropagation();
+                    void toggleStickyNotePin(stickyNote);
+                  }}
+                >
+                  {#if stickyNote.pinnedAtMs === null}
+                    <PinIcon size={14} strokeWidth={2.2} aria-hidden="true" />
+                  {:else}
+                    <PinOff size={14} strokeWidth={2.2} aria-hidden="true" />
+                  {/if}
+                </button>
+                <button
+                  class="icon-button sticky-note-action-button"
+                  type="button"
+                  aria-label="Archive sticky note"
+                  title="Archive sticky note"
+                  onclick={(event) => {
+                    event.stopPropagation();
+                    void archiveStickyNote(stickyNote.id);
+                  }}
+                >
+                  <Archive size={14} strokeWidth={2.2} aria-hidden="true" />
+                </button>
+              </div>
+            {/if}
+          </div>
+        {/each}
+      {/if}
+    </div>
   </div>
 </section>
 
@@ -427,14 +436,22 @@
     min-width: 0;
     min-height: 0;
     flex: 1;
-    flex-direction: column;
-    gap: 12px;
     padding: 0.9rem;
     border: 1px solid rgba(43, 41, 36, 0.12);
     border-radius: 8px;
     background: #fffcf6;
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  .sticky-notes-viewport {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .panel-header {
