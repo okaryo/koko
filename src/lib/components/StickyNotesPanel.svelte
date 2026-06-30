@@ -88,7 +88,18 @@
     }
   }
 
-  function startEditingStickyNote(stickyNote: StickyNote) {
+  type CaretPointDocument = Document & {
+    caretPositionFromPoint?: (
+      x: number,
+      y: number,
+    ) => { offsetNode: Node; offset: number } | null;
+    caretRangeFromPoint?: (x: number, y: number) => Range | null;
+  };
+
+  function startEditingStickyNote(
+    stickyNote: StickyNote,
+    selectionStart = stickyNote.body.length,
+  ) {
     editingStickyNoteId = stickyNote.id;
     editingStickyNoteBody = stickyNote.body;
 
@@ -96,13 +107,86 @@
       const editTextarea = document.querySelector<HTMLTextAreaElement>(
         `[data-sticky-note-edit-id="${stickyNote.id}"]`,
       );
+      const caretOffset = Math.max(
+        0,
+        Math.min(selectionStart, editTextarea?.value.length ?? 0),
+      );
 
       editTextarea?.focus();
-      editTextarea?.setSelectionRange(
-        editTextarea.value.length,
-        editTextarea.value.length,
-      );
+      editTextarea?.setSelectionRange(caretOffset, caretOffset);
     });
+  }
+
+  function startEditingStickyNoteFromClick(
+    event: MouseEvent,
+    stickyNote: StickyNote,
+  ) {
+    const selectionStart = getTextOffsetFromPoint(
+      event.currentTarget,
+      event.clientX,
+      event.clientY,
+    );
+
+    startEditingStickyNote(
+      stickyNote,
+      selectionStart ?? stickyNote.body.length,
+    );
+  }
+
+  function getTextOffsetFromPoint(
+    target: EventTarget | null,
+    clientX: number,
+    clientY: number,
+  ) {
+    if (!(target instanceof HTMLElement)) {
+      return null;
+    }
+
+    const documentWithCaret = document as CaretPointDocument;
+    const caretPosition = documentWithCaret.caretPositionFromPoint?.(
+      clientX,
+      clientY,
+    );
+
+    if (caretPosition) {
+      return getTextOffset(
+        target,
+        caretPosition.offsetNode,
+        caretPosition.offset,
+      );
+    }
+
+    const caretRange = documentWithCaret.caretRangeFromPoint?.(
+      clientX,
+      clientY,
+    );
+
+    if (!caretRange) {
+      return null;
+    }
+
+    return getTextOffset(
+      target,
+      caretRange.startContainer,
+      caretRange.startOffset,
+    );
+  }
+
+  function getTextOffset(root: HTMLElement, node: Node, offset: number) {
+    if (!root.contains(node)) {
+      return null;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(root);
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      range.setEnd(node, Math.min(offset, node.textContent?.length ?? 0));
+    } else {
+      range.setEnd(node, Math.min(offset, node.childNodes.length));
+    }
+
+    return range.toString().length;
   }
 
   function stopEditingStickyNote() {
@@ -378,7 +462,8 @@
                 aria-label="Edit sticky note"
                 role="button"
                 tabindex="0"
-                onclick={() => startEditingStickyNote(stickyNote)}
+                onclick={(event) =>
+                  startEditingStickyNoteFromClick(event, stickyNote)}
                 onkeydown={(event) =>
                   handleStickyNoteEditTargetKeydown(event, stickyNote)}
               >
