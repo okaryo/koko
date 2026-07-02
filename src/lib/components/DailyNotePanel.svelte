@@ -618,7 +618,7 @@
   :global(.daily-note-editor h4),
   :global(.daily-note-editor h5),
   :global(.daily-note-editor h6) {
-    margin: 1.12rem 0 0.56rem;
+    margin: 1.5rem 0 0.76rem;
     color: #24261f;
     font-weight: 760;
     line-height: 1.25;
@@ -714,7 +714,9 @@
     margin-top: 0.76rem;
   }
 
-  :global(.daily-note-editor :is(ul, ol) + :not(ul, ol)) {
+  :global(
+    .daily-note-editor :is(ul, ol) + :not(ul, ol, h1, h2, h3, h4, h5, h6)
+  ) {
     margin-top: 0.76rem;
   }
 
