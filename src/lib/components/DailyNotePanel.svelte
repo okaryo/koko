@@ -710,6 +710,10 @@
     margin: 0;
   }
 
+  :global(.daily-note-editor :is(ul, ol) + :is(ul, ol)) {
+    margin-top: 0.76rem;
+  }
+
   :global(.daily-note-editor :is(ul, ol) + :not(ul, ol)) {
     margin-top: 0.76rem;
   }

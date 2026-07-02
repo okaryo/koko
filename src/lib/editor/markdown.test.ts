@@ -159,4 +159,44 @@ describe("markdownFromTiptapJson", () => {
       }),
     ).toBe("- [ ] Open task\n- [x] Done task");
   });
+
+  it("renders separate task lists with a blank line between them", () => {
+    expect(
+      markdownFromTiptapJson({
+        type: "doc",
+        content: [
+          {
+            type: "taskList",
+            content: [
+              {
+                type: "taskItem",
+                attrs: { checked: false },
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "First task" }],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "taskList",
+            content: [
+              {
+                type: "taskItem",
+                attrs: { checked: false },
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "Second task" }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toBe("- [ ] First task\n\n- [ ] Second task");
+  });
 });
