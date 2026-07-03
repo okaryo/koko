@@ -561,6 +561,8 @@
 
   .saving-status :global(svg) {
     animation: spin 0.9s linear infinite;
+    transform-box: view-box;
+    transform-origin: center;
   }
 
   .note-header-actions .save-status:first-child:last-child {
