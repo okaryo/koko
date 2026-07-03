@@ -100,6 +100,8 @@
     stickyNote: StickyNote,
     selectionStart = stickyNote.body.length,
   ) {
+    const initialScrollTop = stickyNotesViewportElement?.scrollTop;
+
     editingStickyNoteId = stickyNote.id;
     editingStickyNoteBody = stickyNote.body;
 
@@ -112,9 +114,23 @@
         Math.min(selectionStart, editTextarea?.value.length ?? 0),
       );
 
-      editTextarea?.focus();
+      restoreStickyNotesScrollTop(initialScrollTop);
+      editTextarea?.focus({ preventScroll: true });
       editTextarea?.setSelectionRange(caretOffset, caretOffset);
+      restoreStickyNotesScrollTop(initialScrollTop);
+
+      requestAnimationFrame(() => {
+        restoreStickyNotesScrollTop(initialScrollTop);
+      });
     });
+  }
+
+  function restoreStickyNotesScrollTop(scrollTop: number | undefined) {
+    if (scrollTop === undefined || !stickyNotesViewportElement) {
+      return;
+    }
+
+    stickyNotesViewportElement.scrollTop = scrollTop;
   }
 
   function startEditingStickyNoteFromClick(
