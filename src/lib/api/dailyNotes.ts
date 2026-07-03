@@ -13,9 +13,14 @@ export type DailyNoteNavigation = {
   nextNoteDate: string | null;
 };
 
-export function getOrCreateDailyNote(noteDate: string, nowMs: number) {
+export function getOrCreateDailyNote(
+  noteDate: string,
+  initialBodyHtml: string,
+  nowMs: number,
+) {
   return invoke<DailyNote>("get_or_create_daily_note", {
     noteDate,
+    initialBodyHtml,
     nowMs,
   });
 }

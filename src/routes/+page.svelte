@@ -4,6 +4,7 @@
   import { relaunch } from "@tauri-apps/plugin-process";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import Keyboard from "@lucide/svelte/icons/keyboard";
+  import Settings from "@lucide/svelte/icons/settings";
   import {
     getDailyNote,
     getDailyNoteNavigation,
@@ -12,11 +13,14 @@
     type DailyNote,
     type DailyNoteNavigation,
   } from "$lib/api/dailyNotes";
+  import { getSettings } from "$lib/api/settings";
+  import AppSettingsDialog from "$lib/components/AppSettingsDialog.svelte";
   import DailyNotePanel from "$lib/components/DailyNotePanel.svelte";
   import KeyboardShortcutsDialog from "$lib/components/KeyboardShortcutsDialog.svelte";
   import PomodoroPanel from "$lib/components/PomodoroPanel.svelte";
   import StickyNotesPanel from "$lib/components/StickyNotesPanel.svelte";
   import { formatDateLabel, formatLocalDate } from "$lib/date";
+  import { htmlFromDailyNoteMarkdown } from "$lib/editor/dailyNoteContent";
   import { appCommandFromKeydown } from "$lib/keyboard";
 
   type DailyNoteSaveStatus = "idle" | "saving" | "saved" | "error";
@@ -39,6 +43,7 @@
     nextNoteDate: null,
   });
   let todayDailyNoteExists = $state(true);
+  let appSettingsOpen = $state(false);
   let keyboardShortcutsOpen = $state(false);
   let dateCheckInterval: ReturnType<typeof setInterval> | null = null;
   let dailyNoteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -104,7 +109,8 @@
 
     await saveCurrentDailyNoteImmediately();
 
-    const todayDailyNote = await loadDailyNote(currentDate);
+    const initialBodyHtml = await loadDailyNoteTemplateHtml();
+    const todayDailyNote = await loadDailyNote(currentDate, initialBodyHtml);
 
     if (!todayDailyNote) {
       dailyNoteSaveStatus = "error";
@@ -116,12 +122,25 @@
     await refreshDailyNoteNavigation();
   }
 
-  async function loadDailyNote(noteDate: string) {
+  async function loadDailyNote(noteDate: string, initialBodyHtml = "") {
     try {
-      return await getOrCreateDailyNote(noteDate, Date.now());
+      return await getOrCreateDailyNote(noteDate, initialBodyHtml, Date.now());
     } catch (error) {
       console.warn("DailyNote load failed", error);
       return null;
+    }
+  }
+
+  async function loadDailyNoteTemplateHtml() {
+    try {
+      const settings = await getSettings();
+
+      return await htmlFromDailyNoteMarkdown(
+        settings.dailyNote.templateMarkdown,
+      );
+    } catch (error) {
+      console.warn("DailyNote template load failed", error);
+      return "";
     }
   }
 
@@ -438,18 +457,38 @@
     </aside>
   </div>
 
-  <button
-    class="keyboard-shortcuts-button"
-    type="button"
-    title="Keyboard shortcuts"
-    aria-label="Keyboard shortcuts"
-    onclick={() => {
-      keyboardShortcutsOpen = true;
-    }}
-  >
-    <Keyboard size={16} strokeWidth={2.2} aria-hidden="true" />
-  </button>
+  <div class="app-floating-actions" aria-label="App actions">
+    <button
+      class="floating-action-button"
+      type="button"
+      title="Keyboard shortcuts"
+      aria-label="Keyboard shortcuts"
+      onclick={() => {
+        keyboardShortcutsOpen = true;
+      }}
+    >
+      <Keyboard size={16} strokeWidth={2.2} aria-hidden="true" />
+    </button>
+    <button
+      class="floating-action-button"
+      type="button"
+      title="App settings"
+      aria-label="App settings"
+      onclick={() => {
+        appSettingsOpen = true;
+      }}
+    >
+      <Settings size={16} strokeWidth={2.2} aria-hidden="true" />
+    </button>
+  </div>
 </main>
+
+<AppSettingsDialog
+  open={appSettingsOpen}
+  onClose={() => {
+    appSettingsOpen = false;
+  }}
+/>
 
 <KeyboardShortcutsDialog
   open={keyboardShortcutsOpen}
@@ -548,11 +587,33 @@
     overflow: hidden;
   }
 
-  .keyboard-shortcuts-button {
+  .app-floating-actions {
     position: absolute;
     bottom: 1.2rem;
     right: 0;
     z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    overflow: hidden;
+    border: 1px solid rgba(43, 41, 36, 0.16);
+    border-right: 0;
+    border-radius: 8px 0 0 8px;
+    background: rgba(226, 232, 214, 0.94);
+    box-shadow: 0 8px 22px rgba(43, 41, 36, 0.16);
+    transform: translateX(24px);
+    transition:
+      background 120ms ease,
+      transform 140ms ease;
+  }
+
+  .app-floating-actions:hover,
+  .app-floating-actions:focus-within {
+    background: #e2e8d6;
+    transform: translateX(0);
+  }
+
+  .floating-action-button {
     display: inline-flex;
     width: 34px;
     min-width: 34px;
@@ -560,24 +621,19 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-color: rgba(43, 41, 36, 0.14);
-    border-right: 0;
-    border-radius: 6px 0 0 6px;
-    background: rgba(255, 253, 248, 0.88);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     color: #4a4438;
-    box-shadow: 0 6px 20px rgba(43, 41, 36, 0.12);
-    transform: translateX(24px);
     transition:
       background 120ms ease,
-      color 120ms ease,
-      transform 140ms ease;
+      color 120ms ease;
   }
 
-  .keyboard-shortcuts-button:hover,
-  .keyboard-shortcuts-button:focus-visible {
-    background: #fffdf8;
+  .floating-action-button:hover,
+  .floating-action-button:focus-visible {
+    background: rgba(111, 143, 78, 0.16);
     color: #20211f;
-    transform: translateX(0);
   }
 
   .update-button {

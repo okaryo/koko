@@ -1,8 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 
 export type AppSettings = {
+  dailyNote: DailyNoteSettings;
   globalShortcut: GlobalShortcutSettings;
   pomodoro: PomodoroSettings;
+};
+
+export type DailyNoteSettings = {
+  templateMarkdown: string;
 };
 
 export type GlobalShortcutSettings = {
@@ -22,6 +27,12 @@ export function getSettings() {
 export function updateDailyNoteGlobalShortcut(shortcut: string) {
   return invoke<AppSettings>("update_daily_note_global_shortcut", {
     shortcut,
+  });
+}
+
+export function updateDailyNoteTemplateSettings(templateMarkdown: string) {
+  return invoke<AppSettings>("update_daily_note_template_settings", {
+    templateMarkdown,
   });
 }
 

@@ -38,7 +38,6 @@ Direction decisions:
 Open product questions:
 
 - What UI should appear after the date crosses while an older DailyNote is still active?
-- When the user starts today's note, should koko create a blank note, copy a template, or insert a default heading?
 - Should koko show previous DailyNotes in-app in `v0.1.0`, or only focus on the active DailyNote?
 - Should Pomodoro completion insert a timestamp or prompt in the DailyNote?
 
@@ -278,10 +277,14 @@ Release decisions:
 
 ## Later
 
-- [ ] DailyNote templates
+- [x] DailyNote templates
 - [ ] DailyNote history picker
 - [ ] Search DailyNotes
 
 Later decisions:
 
 - Do not add these until the core writing and Pomodoro loop feels right.
+- DailyNote template Markdown is stored in `settings.json` as a lightweight app setting.
+- An empty DailyNote template means newly created DailyNotes start blank.
+- The DailyNote template is applied only when `Start today's note` creates a new DailyNote.
+- Updating the DailyNote template does not modify existing DailyNotes.

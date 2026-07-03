@@ -11,9 +11,18 @@ pub const MAX_POMODORO_FOCUS_DURATION_MINUTES: u8 = 60;
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     #[serde(default)]
+    pub daily_note: DailyNoteSettings,
+    #[serde(default)]
     pub global_shortcut: GlobalShortcutSettings,
     #[serde(default)]
     pub pomodoro: PomodoroSettings,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DailyNoteSettings {
+    #[serde(default)]
+    pub template_markdown: String,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -37,6 +46,7 @@ pub struct PomodoroSettings {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
+            daily_note: DailyNoteSettings::default(),
             global_shortcut: GlobalShortcutSettings::default(),
             pomodoro: PomodoroSettings {
                 focus_duration_minutes: DEFAULT_POMODORO_FOCUS_DURATION_MINUTES,
