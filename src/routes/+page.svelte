@@ -457,18 +457,7 @@
     </aside>
   </div>
 
-  <div class="app-floating-actions">
-    <button
-      class="floating-action-button"
-      type="button"
-      title="App settings"
-      aria-label="App settings"
-      onclick={() => {
-        appSettingsOpen = true;
-      }}
-    >
-      <Settings size={16} strokeWidth={2.2} aria-hidden="true" />
-    </button>
+  <div class="app-floating-actions" aria-label="App actions">
     <button
       class="floating-action-button"
       type="button"
@@ -479,6 +468,17 @@
       }}
     >
       <Keyboard size={16} strokeWidth={2.2} aria-hidden="true" />
+    </button>
+    <button
+      class="floating-action-button"
+      type="button"
+      title="App settings"
+      aria-label="App settings"
+      onclick={() => {
+        appSettingsOpen = true;
+      }}
+    >
+      <Settings size={16} strokeWidth={2.2} aria-hidden="true" />
     </button>
   </div>
 </main>
@@ -594,8 +594,23 @@
     z-index: 5;
     display: flex;
     flex-direction: column;
-    gap: 6px;
     align-items: flex-end;
+    overflow: hidden;
+    border: 1px solid rgba(43, 41, 36, 0.16);
+    border-right: 0;
+    border-radius: 8px 0 0 8px;
+    background: rgba(226, 232, 214, 0.94);
+    box-shadow: 0 8px 22px rgba(43, 41, 36, 0.16);
+    transform: translateX(24px);
+    transition:
+      background 120ms ease,
+      transform 140ms ease;
+  }
+
+  .app-floating-actions:hover,
+  .app-floating-actions:focus-within {
+    background: #e2e8d6;
+    transform: translateX(0);
   }
 
   .floating-action-button {
@@ -606,24 +621,19 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-color: rgba(43, 41, 36, 0.14);
-    border-right: 0;
-    border-radius: 6px 0 0 6px;
-    background: rgba(255, 253, 248, 0.88);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     color: #4a4438;
-    box-shadow: 0 6px 20px rgba(43, 41, 36, 0.12);
-    transform: translateX(24px);
     transition:
       background 120ms ease,
-      color 120ms ease,
-      transform 140ms ease;
+      color 120ms ease;
   }
 
   .floating-action-button:hover,
   .floating-action-button:focus-visible {
-    background: #fffdf8;
+    background: rgba(111, 143, 78, 0.16);
     color: #20211f;
-    transform: translateX(0);
   }
 
   .update-button {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import Check from "@lucide/svelte/icons/check";
   import X from "@lucide/svelte/icons/x";
   import {
     getSettings,
@@ -127,7 +128,13 @@
         {#if settingsStatus === "saving"}
           <span class="settings-status">Saving</span>
         {:else if settingsStatus === "saved"}
-          <span class="settings-status">Saved</span>
+          <span
+            class="settings-status icon-only"
+            title="Saved"
+            aria-label="Saved"
+          >
+            <Check size={16} strokeWidth={2.2} aria-hidden="true" />
+          </span>
         {:else if settingsStatus === "error"}
           <span class="settings-status error-status">Save failed</span>
         {/if}
@@ -248,9 +255,20 @@
   }
 
   .settings-status {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 1rem;
+    align-items: center;
+    justify-content: center;
     color: #766d5f;
     font-size: 0.78rem;
     font-weight: 620;
+    line-height: 1;
+  }
+
+  .settings-status.icon-only {
+    width: 1rem;
+    height: 1rem;
   }
 
   .error-status {
