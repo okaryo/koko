@@ -4,6 +4,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 pub fn get_or_create(
     connection: &Connection,
     note_date: &str,
+    initial_body_html: &str,
     now_ms: i64,
 ) -> Result<DailyNote, String> {
     if let Some(daily_note) = find_by_date(connection, note_date)? {
@@ -14,9 +15,9 @@ pub fn get_or_create(
         .execute(
             "
             INSERT INTO daily_notes (note_date, body_html, created_at_ms, updated_at_ms)
-            VALUES (?1, '', ?2, ?2)
+            VALUES (?1, ?2, ?3, ?3)
             ",
-            params![note_date, now_ms],
+            params![note_date, initial_body_html, now_ms],
         )
         .map_err(|error| format!("Failed to create DailyNote: {error}"))?;
 
@@ -178,7 +179,7 @@ mod tests {
     fn creates_daily_note_when_missing() {
         let connection = migrated_connection();
 
-        let daily_note = get_or_create(&connection, "2026-06-26", 1000).expect("get or create");
+        let daily_note = get_or_create(&connection, "2026-06-26", "", 1000).expect("get or create");
 
         assert_eq!(daily_note.note_date, "2026-06-26");
         assert_eq!(daily_note.body_html, "");
@@ -187,13 +188,25 @@ mod tests {
     }
 
     #[test]
+    fn creates_daily_note_with_initial_body() {
+        let connection = migrated_connection();
+
+        let daily_note = get_or_create(&connection, "2026-06-26", "<ul><li>Plan</li></ul>", 1000)
+            .expect("get or create");
+
+        assert_eq!(daily_note.body_html, "<ul><li>Plan</li></ul>");
+    }
+
+    #[test]
     fn reuses_existing_daily_note() {
         let connection = migrated_connection();
 
-        let first = get_or_create(&connection, "2026-06-26", 1000).expect("create");
-        let second = get_or_create(&connection, "2026-06-26", 2000).expect("reuse");
+        let first = get_or_create(&connection, "2026-06-26", "<p>First</p>", 1000).expect("create");
+        let second =
+            get_or_create(&connection, "2026-06-26", "<p>Second</p>", 2000).expect("reuse");
 
         assert_eq!(second.id, first.id);
+        assert_eq!(second.body_html, "<p>First</p>");
         assert_eq!(second.created_at_ms, 1000);
         assert_eq!(second.updated_at_ms, 1000);
     }
@@ -201,7 +214,7 @@ mod tests {
     #[test]
     fn updates_daily_note_body() {
         let connection = migrated_connection();
-        let daily_note = get_or_create(&connection, "2026-06-26", 1000).expect("create");
+        let daily_note = get_or_create(&connection, "2026-06-26", "", 1000).expect("create");
 
         let updated =
             update_body(&connection, daily_note.id, "<p>Updated</p>", 2000).expect("update");
@@ -213,9 +226,9 @@ mod tests {
     #[test]
     fn gets_daily_note_navigation() {
         let connection = migrated_connection();
-        get_or_create(&connection, "2026-06-25", 1000).expect("create older");
-        get_or_create(&connection, "2026-06-27", 2000).expect("create active");
-        get_or_create(&connection, "2026-06-29", 3000).expect("create newer");
+        get_or_create(&connection, "2026-06-25", "", 1000).expect("create older");
+        get_or_create(&connection, "2026-06-27", "", 2000).expect("create active");
+        get_or_create(&connection, "2026-06-29", "", 3000).expect("create newer");
 
         let navigation = navigation(&connection, "2026-06-27").expect("get navigation");
 
@@ -229,7 +242,7 @@ mod tests {
     #[test]
     fn gets_no_navigation_when_adjacent_daily_notes_do_not_exist() {
         let connection = migrated_connection();
-        get_or_create(&connection, "2026-06-27", 1000).expect("create active");
+        get_or_create(&connection, "2026-06-27", "", 1000).expect("create active");
 
         let navigation = navigation(&connection, "2026-06-27").expect("get navigation");
 

@@ -84,6 +84,9 @@ mod tests {
     fn saves_and_loads_settings() {
         let path = temporary_settings_path("save");
         let settings = AppSettings {
+            daily_note: super::super::model::DailyNoteSettings {
+                template_markdown: "- [ ] Plan\n\n## Log".to_string(),
+            },
             global_shortcut: super::super::model::GlobalShortcutSettings {
                 daily_note_focus: "CommandOrControl+Shift+J".to_string(),
             },

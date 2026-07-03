@@ -7,11 +7,12 @@ use tauri::{AppHandle, Emitter};
 pub fn get_or_create_daily_note(
     app: AppHandle,
     note_date: String,
+    initial_body_html: String,
     now_ms: i64,
 ) -> Result<DailyNote, String> {
     let connection = db::open(&app)?;
 
-    repository::get_or_create(&connection, &note_date, now_ms)
+    repository::get_or_create(&connection, &note_date, &initial_body_html, now_ms)
 }
 
 #[tauri::command]

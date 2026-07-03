@@ -10,6 +10,19 @@ pub fn get_settings(app: AppHandle) -> Result<AppSettings, String> {
 }
 
 #[tauri::command]
+pub fn update_daily_note_template_settings(
+    app: AppHandle,
+    template_markdown: String,
+) -> Result<AppSettings, String> {
+    let mut settings = service::load(&app)?;
+
+    settings.daily_note.template_markdown = template_markdown;
+    service::save(&app, &settings)?;
+
+    Ok(settings)
+}
+
+#[tauri::command]
 pub fn update_pomodoro_volume_settings(
     app: AppHandle,
     focus_volume: u8,

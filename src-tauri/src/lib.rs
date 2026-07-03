@@ -37,6 +37,7 @@ pub fn run() {
             sticky_note::commands::unpin_sticky_note,
             settings::commands::get_settings,
             global_shortcut::update_daily_note_global_shortcut,
+            settings::commands::update_daily_note_template_settings,
             settings::commands::update_pomodoro_timer_settings,
             settings::commands::update_pomodoro_volume_settings,
         ])

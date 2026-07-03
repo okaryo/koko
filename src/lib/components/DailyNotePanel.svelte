@@ -16,7 +16,7 @@
     markdownFromTiptapJson,
   } from "$lib/editor/markdown";
   import { overlayScrollbars } from "$lib/actions/overlayScrollbars";
-  import { createTaskItemKeyboard } from "$lib/editor/taskItemKeyboard";
+  import { dailyNoteExtensions } from "$lib/editor/dailyNoteContent";
   import { dailyNoteCommandFromKeydown, isEditableTarget } from "$lib/keyboard";
 
   type Props = {
@@ -88,13 +88,13 @@
         element: editorElement,
         content: bodyHtml,
         extensions: [
-          StarterKit,
-          TaskList,
-          TaskItem.configure({
-            nested: true,
-          }),
-          createTaskItemKeyboard(Extension),
-          Markdown,
+          ...dailyNoteExtensions(
+            Extension,
+            StarterKit,
+            Markdown,
+            TaskList,
+            TaskItem,
+          ),
           Placeholder.configure({
             placeholder: "Start writing...",
           }),
