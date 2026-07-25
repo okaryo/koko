@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { StickyNote } from "$lib/api/stickyNotes";
 import {
   compareStickyNotes,
+  reorderStickyNotesOptimistically,
   stickyNotesInGroup,
   targetPositionForDrop,
+  targetPositionForDropEdge,
   targetPositionForKeyboardMove,
 } from "./stickyNoteOrder";
 
@@ -68,5 +70,52 @@ describe("StickyNote ordering", () => {
 
     expect(targetPositionForDrop(pinned, unpinned, false)).toBeNull();
     expect(targetPositionForDrop(unpinned, pinned, true)).toBeNull();
+  });
+
+  it("maps Pragmatic drag-and-drop edges to list positions", () => {
+    const first = stickyNote(1, 0);
+    const third = stickyNote(3, 2);
+
+    expect(targetPositionForDropEdge(first, third, "top")).toBe(1);
+    expect(targetPositionForDropEdge(first, third, "bottom")).toBe(2);
+    expect(targetPositionForDropEdge(third, first, "top")).toBe(0);
+    expect(targetPositionForDropEdge(third, first, "bottom")).toBe(1);
+  });
+
+  it("updates group positions optimistically without changing note metadata", () => {
+    const first = stickyNote(1, 0);
+    const second = stickyNote(2, 1);
+    const third = stickyNote(3, 2);
+    const pinned = stickyNote(4, 0, true);
+    const stickyNotes = [pinned, first, second, third];
+
+    const reordered = reorderStickyNotesOptimistically(stickyNotes, 1, 2);
+
+    expect(reordered.map(({ id }) => id)).toEqual([4, 2, 3, 1]);
+    expect(
+      reordered
+        .filter(({ pinnedAtMs }) => pinnedAtMs === null)
+        .map(({ id, position }) => [id, position]),
+    ).toEqual([
+      [2, 0],
+      [3, 1],
+      [1, 2],
+    ]);
+    expect(reordered.find(({ id }) => id === 1)).toEqual({
+      ...first,
+      position: 2,
+    });
+    expect(reordered.find(({ id }) => id === 4)).toBe(pinned);
+  });
+
+  it("keeps the current array for missing notes and no-op moves", () => {
+    const stickyNotes = [stickyNote(1, 0), stickyNote(2, 1)];
+
+    expect(reorderStickyNotesOptimistically(stickyNotes, 99, 0)).toBe(
+      stickyNotes,
+    );
+    expect(reorderStickyNotesOptimistically(stickyNotes, 1, 0)).toBe(
+      stickyNotes,
+    );
   });
 });

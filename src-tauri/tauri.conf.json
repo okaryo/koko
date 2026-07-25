@@ -17,7 +17,8 @@
         "height": 720,
         "minWidth": 860,
         "minHeight": 630,
-        "theme": "Light"
+        "theme": "Light",
+        "dragDropEnabled": false
       }
     ],
     "security": {

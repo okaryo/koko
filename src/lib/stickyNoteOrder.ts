@@ -2,6 +2,7 @@ import type { StickyNote } from "$lib/api/stickyNotes";
 
 export type StickyNoteGroup = "pinned" | "unpinned";
 export type StickyNoteMoveDirection = "up" | "down";
+export type StickyNoteDropEdge = "top" | "bottom";
 
 export function stickyNoteGroup(stickyNote: StickyNote): StickyNoteGroup {
   return stickyNote.pinnedAtMs === null ? "unpinned" : "pinned";
@@ -76,4 +77,58 @@ export function targetPositionForDrop(
   }
 
   return targetPosition;
+}
+
+export function targetPositionForDropEdge(
+  draggedStickyNote: StickyNote,
+  targetStickyNote: StickyNote,
+  edge: StickyNoteDropEdge,
+) {
+  return targetPositionForDrop(
+    draggedStickyNote,
+    targetStickyNote,
+    edge === "bottom",
+  );
+}
+
+export function reorderStickyNotesOptimistically(
+  stickyNotes: StickyNote[],
+  id: number,
+  targetPosition: number,
+) {
+  const stickyNote = stickyNotes.find((candidate) => candidate.id === id);
+
+  if (!stickyNote) {
+    return stickyNotes;
+  }
+
+  const group = stickyNoteGroup(stickyNote);
+  const groupStickyNotes = stickyNotesInGroup(stickyNotes, group);
+  const currentPosition = groupStickyNotes.findIndex(
+    (candidate) => candidate.id === id,
+  );
+  const nextPosition = Math.max(
+    0,
+    Math.min(targetPosition, groupStickyNotes.length - 1),
+  );
+
+  if (currentPosition === nextPosition) {
+    return stickyNotes;
+  }
+
+  const reorderedGroup = groupStickyNotes.filter(
+    (candidate) => candidate.id !== id,
+  );
+  reorderedGroup.splice(nextPosition, 0, stickyNote);
+  const positions = new Map(
+    reorderedGroup.map((candidate, position) => [candidate.id, position]),
+  );
+
+  return stickyNotes
+    .map((candidate) => {
+      const position = positions.get(candidate.id);
+
+      return position === undefined ? candidate : { ...candidate, position };
+    })
+    .sort(compareStickyNotes);
 }

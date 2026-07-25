@@ -16,13 +16,21 @@
     updateStickyNoteBody,
   } from "$lib/api/stickyNotes";
   import { overlayScrollbars } from "$lib/actions/overlayScrollbars";
+  import {
+    monitorStickyNoteDragAndDrop,
+    stickyNoteDragHandle,
+    stickyNoteDropTarget,
+    type StickyNoteDrop,
+    type StickyNoteDropTarget,
+  } from "$lib/actions/stickyNoteDragAndDrop";
   import { insertMarkdownListContinuation } from "$lib/editor/textareaMarkdown";
   import { stickyNoteCommandFromKeydown } from "$lib/keyboard";
   import {
     compareStickyNotes,
+    reorderStickyNotesOptimistically,
     stickyNoteGroup,
     stickyNotesInGroup,
-    targetPositionForDrop,
+    targetPositionForDropEdge,
     targetPositionForKeyboardMove,
     type StickyNoteMoveDirection,
   } from "$lib/stickyNoteOrder";
@@ -37,11 +45,7 @@
   let editingStickyNoteId = $state<number | null>(null);
   let editingStickyNoteBody = $state("");
   let draggedStickyNoteId = $state<number | null>(null);
-  let dropTarget = $state<{
-    stickyNoteId: number;
-    targetPosition: number;
-    dropAfter: boolean;
-  } | null>(null);
+  let dropTarget = $state<StickyNoteDropTarget | null>(null);
   let reorderAnnouncement = $state("");
   let reorderQueue = Promise.resolve();
   let pinnedStickyNotes = $derived(stickyNotesInGroup(stickyNotes, "pinned"));
@@ -60,9 +64,18 @@
   );
 
   onMount(() => {
+    const cleanupDragAndDropMonitor = monitorStickyNoteDragAndDrop({
+      onDragStart: handleStickyNoteDragStart,
+      onDropTargetChange: handleStickyNoteDropTargetChange,
+      onDrop: handleStickyNoteDrop,
+      onDragEnd: clearStickyNoteDrag,
+    });
+
     void loadStickyNotes().then((loadedStickyNotes) => {
       stickyNotes = loadedStickyNotes;
     });
+
+    return cleanupDragAndDropMonitor;
   });
 
   async function createStickyNote() {
@@ -306,16 +319,26 @@
 
       const stickyNote = stickyNotes.find((candidate) => candidate.id === id);
 
-      if (!stickyNote || stickyNote.position === resolvedTargetPosition) {
+      if (!stickyNote) {
         return;
       }
+
+      if (stickyNote.position === resolvedTargetPosition) {
+        return;
+      }
+
+      stickyNotes = reorderStickyNotesOptimistically(
+        stickyNotes,
+        id,
+        resolvedTargetPosition,
+      );
+      announceStickyNotePosition(id);
 
       try {
         stickyNotes = await reorderPersistedStickyNote(
           id,
           resolvedTargetPosition,
         );
-        announceStickyNotePosition(id);
       } catch (error) {
         console.warn("StickyNote reorder failed", error);
         stickyNotes = await loadStickyNotes();
@@ -377,88 +400,76 @@
     );
   }
 
-  function handleStickyNoteDragStart(event: DragEvent, stickyNote: StickyNote) {
-    draggedStickyNoteId = stickyNote.id;
+  function handleStickyNoteDragStart(stickyNoteId: number) {
+    draggedStickyNoteId = stickyNoteId;
     dropTarget = null;
-
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", String(stickyNote.id));
-    }
   }
 
-  function handleStickyNoteDragOver(
-    event: DragEvent,
-    targetStickyNote: StickyNote,
+  function handleStickyNoteDropTargetChange(
+    nextDropTarget: StickyNoteDropTarget | null,
   ) {
-    const draggedStickyNote = stickyNotes.find(
-      (stickyNote) => stickyNote.id === draggedStickyNoteId,
-    );
+    if (nextDropTarget && draggedStickyNoteId !== null) {
+      const currentDropTarget = nextDropTarget;
+      const draggedStickyNote = stickyNotes.find(
+        (stickyNote) => stickyNote.id === draggedStickyNoteId,
+      );
+      const targetStickyNote = stickyNotes.find(
+        (stickyNote) => stickyNote.id === currentDropTarget.stickyNoteId,
+      );
+      const targetPosition =
+        draggedStickyNote && targetStickyNote
+          ? targetPositionForDropEdge(
+              draggedStickyNote,
+              targetStickyNote,
+              currentDropTarget.edge,
+            )
+          : null;
 
-    if (!draggedStickyNote || !(event.currentTarget instanceof HTMLElement)) {
-      dropTarget = null;
-      return;
-    }
-
-    const targetRect = event.currentTarget.getBoundingClientRect();
-    const dropAfter = event.clientY >= targetRect.top + targetRect.height / 2;
-    const targetPosition = targetPositionForDrop(
-      draggedStickyNote,
-      targetStickyNote,
-      dropAfter,
-    );
-
-    if (targetPosition === null) {
-      dropTarget = null;
-
-      if (event.dataTransfer) {
-        event.dataTransfer.dropEffect = "none";
+      if (
+        !draggedStickyNote ||
+        targetPosition === null ||
+        targetPosition === draggedStickyNote.position
+      ) {
+        nextDropTarget = null;
       }
-
-      return;
     }
 
-    event.preventDefault();
-
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = "move";
-    }
-
-    dropTarget =
-      targetPosition === draggedStickyNote.position
-        ? null
-        : {
-            stickyNoteId: targetStickyNote.id,
-            targetPosition,
-            dropAfter,
-          };
-  }
-
-  function handleStickyNoteDragLeave(event: DragEvent, stickyNoteId: number) {
     if (
-      event.currentTarget instanceof HTMLElement &&
-      event.relatedTarget instanceof Node &&
-      event.currentTarget.contains(event.relatedTarget)
+      dropTarget?.stickyNoteId === nextDropTarget?.stickyNoteId &&
+      dropTarget?.edge === nextDropTarget?.edge
     ) {
       return;
     }
 
-    if (dropTarget?.stickyNoteId === stickyNoteId) {
-      dropTarget = null;
-    }
+    dropTarget = nextDropTarget;
   }
 
-  function handleStickyNoteDrop(event: DragEvent) {
-    if (draggedStickyNoteId === null || dropTarget === null) {
+  function handleStickyNoteDrop(drop: StickyNoteDrop) {
+    const draggedStickyNote = stickyNotes.find(
+      (stickyNote) => stickyNote.id === drop.sourceStickyNoteId,
+    );
+    const targetStickyNote = stickyNotes.find(
+      (stickyNote) => stickyNote.id === drop.targetStickyNoteId,
+    );
+
+    if (!draggedStickyNote || !targetStickyNote) {
       return;
     }
 
-    event.preventDefault();
-    const id = draggedStickyNoteId;
-    const targetPosition = dropTarget.targetPosition;
+    const targetPosition = targetPositionForDropEdge(
+      draggedStickyNote,
+      targetStickyNote,
+      drop.edge,
+    );
 
-    clearStickyNoteDrag();
-    queueStickyNoteReorder(id, targetPosition, false);
+    if (
+      targetPosition === null ||
+      targetPosition === draggedStickyNote.position
+    ) {
+      return;
+    }
+
+    queueStickyNoteReorder(draggedStickyNote.id, targetPosition, false);
   }
 
   function clearStickyNoteDrag() {
@@ -686,130 +697,127 @@
             <div class="sticky-note-list" role="list">
               {#each group.stickyNotes as stickyNote (stickyNote.id)}
                 <div
-                  id={`sticky-note-${stickyNote.id}`}
                   role="listitem"
-                  class={`sticky-note ${
-                    editingStickyNoteId !== stickyNote.id
-                      ? "sticky-note-display"
-                      : ""
-                  } ${
-                    stickyNote.pinnedAtMs !== null ? "sticky-note-pinned" : ""
-                  } ${
-                    draggedStickyNoteId === stickyNote.id
-                      ? "sticky-note-dragging"
-                      : ""
-                  } ${
+                  class={`sticky-note-drop-zone ${
                     dropTarget?.stickyNoteId === stickyNote.id
-                      ? dropTarget.dropAfter
+                      ? dropTarget.edge === "bottom"
                         ? "sticky-note-drop-after"
                         : "sticky-note-drop-before"
                       : ""
                   }`}
-                  ondragover={(event) =>
-                    handleStickyNoteDragOver(event, stickyNote)}
-                  ondragleave={(event) =>
-                    handleStickyNoteDragLeave(event, stickyNote.id)}
-                  ondrop={handleStickyNoteDrop}
+                  use:stickyNoteDropTarget={{ stickyNote }}
                 >
-                  {#if editingStickyNoteId === stickyNote.id}
-                    <textarea
-                      data-sticky-note-edit-id={stickyNote.id}
-                      bind:value={editingStickyNoteBody}
-                      rows="3"
-                      use:disableAutocorrect
-                      autocapitalize="off"
-                      autocomplete="off"
-                      spellcheck="false"
-                      aria-label="Edit sticky note"
-                      use:autoResizeTextarea
-                      onclick={(event) => event.stopPropagation()}
-                      onkeydown={handleEditKeydown}
-                      onblur={() => void saveEditingStickyNote()}></textarea>
-                  {:else}
-                    <div
-                      class="sticky-note-edit-button"
-                      aria-label="Edit sticky note"
-                      role="button"
-                      tabindex="0"
-                      onclick={(event) =>
-                        startEditingStickyNoteFromClick(event, stickyNote)}
-                      onkeydown={(event) =>
-                        handleStickyNoteEditTargetKeydown(event, stickyNote)}
-                    >
-                      <p>{stickyNote.body}</p>
-                    </div>
-                    <div class="sticky-note-actions">
-                      <button
-                        class="icon-button sticky-note-action-button sticky-note-reorder-handle"
-                        type="button"
-                        draggable="true"
-                        data-sticky-note-reorder-id={stickyNote.id}
-                        aria-label="Reorder sticky note"
-                        aria-keyshortcuts="ArrowUp ArrowDown"
-                        title="Drag or use arrow keys to reorder"
+                  <div
+                    id={`sticky-note-${stickyNote.id}`}
+                    class={`sticky-note ${
+                      editingStickyNoteId !== stickyNote.id
+                        ? "sticky-note-display"
+                        : ""
+                    } ${
+                      stickyNote.pinnedAtMs !== null ? "sticky-note-pinned" : ""
+                    } ${
+                      draggedStickyNoteId === stickyNote.id
+                        ? "sticky-note-dragging"
+                        : ""
+                    }`}
+                  >
+                    {#if editingStickyNoteId === stickyNote.id}
+                      <textarea
+                        data-sticky-note-edit-id={stickyNote.id}
+                        bind:value={editingStickyNoteBody}
+                        rows="3"
+                        use:disableAutocorrect
+                        autocapitalize="off"
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-label="Edit sticky note"
+                        use:autoResizeTextarea
                         onclick={(event) => event.stopPropagation()}
+                        onkeydown={handleEditKeydown}
+                        onblur={() => void saveEditingStickyNote()}></textarea>
+                    {:else}
+                      <div
+                        class="sticky-note-edit-button"
+                        aria-label="Edit sticky note"
+                        role="button"
+                        tabindex="0"
+                        onclick={(event) =>
+                          startEditingStickyNoteFromClick(event, stickyNote)}
                         onkeydown={(event) =>
-                          handleReorderHandleKeydown(event, stickyNote)}
-                        ondragstart={(event) =>
-                          handleStickyNoteDragStart(event, stickyNote)}
-                        ondragend={clearStickyNoteDrag}
+                          handleStickyNoteEditTargetKeydown(event, stickyNote)}
                       >
-                        <GripVertical
-                          size={14}
-                          strokeWidth={2.2}
-                          aria-hidden="true"
-                        />
-                      </button>
-                      <button
-                        class={`icon-button sticky-note-action-button ${
-                          stickyNote.pinnedAtMs !== null
-                            ? "sticky-note-action-button-active"
-                            : ""
-                        }`}
-                        type="button"
-                        aria-label={stickyNote.pinnedAtMs === null
-                          ? "Pin sticky note"
-                          : "Unpin sticky note"}
-                        title={stickyNote.pinnedAtMs === null
-                          ? "Pin sticky note"
-                          : "Unpin sticky note"}
-                        onclick={(event) => {
-                          event.stopPropagation();
-                          void toggleStickyNotePin(stickyNote);
-                        }}
-                      >
-                        {#if stickyNote.pinnedAtMs === null}
-                          <PinIcon
+                        <p>{stickyNote.body}</p>
+                      </div>
+                      <div class="sticky-note-actions">
+                        <button
+                          class="icon-button sticky-note-action-button sticky-note-reorder-handle"
+                          type="button"
+                          data-sticky-note-reorder-id={stickyNote.id}
+                          aria-label="Reorder sticky note"
+                          aria-keyshortcuts="ArrowUp ArrowDown"
+                          title="Drag or use arrow keys to reorder"
+                          onclick={(event) => event.stopPropagation()}
+                          onkeydown={(event) =>
+                            handleReorderHandleKeydown(event, stickyNote)}
+                          use:stickyNoteDragHandle={{ stickyNote }}
+                        >
+                          <GripVertical
                             size={14}
                             strokeWidth={2.2}
                             aria-hidden="true"
                           />
-                        {:else}
-                          <PinOff
+                        </button>
+                        <button
+                          class={`icon-button sticky-note-action-button ${
+                            stickyNote.pinnedAtMs !== null
+                              ? "sticky-note-action-button-active"
+                              : ""
+                          }`}
+                          type="button"
+                          aria-label={stickyNote.pinnedAtMs === null
+                            ? "Pin sticky note"
+                            : "Unpin sticky note"}
+                          title={stickyNote.pinnedAtMs === null
+                            ? "Pin sticky note"
+                            : "Unpin sticky note"}
+                          onclick={(event) => {
+                            event.stopPropagation();
+                            void toggleStickyNotePin(stickyNote);
+                          }}
+                        >
+                          {#if stickyNote.pinnedAtMs === null}
+                            <PinIcon
+                              size={14}
+                              strokeWidth={2.2}
+                              aria-hidden="true"
+                            />
+                          {:else}
+                            <PinOff
+                              size={14}
+                              strokeWidth={2.2}
+                              aria-hidden="true"
+                            />
+                          {/if}
+                        </button>
+                        <button
+                          class="icon-button sticky-note-action-button"
+                          type="button"
+                          aria-label="Archive sticky note"
+                          title="Archive sticky note"
+                          onclick={(event) => {
+                            event.stopPropagation();
+                            void archiveStickyNote(stickyNote.id);
+                          }}
+                        >
+                          <Archive
                             size={14}
                             strokeWidth={2.2}
                             aria-hidden="true"
                           />
-                        {/if}
-                      </button>
-                      <button
-                        class="icon-button sticky-note-action-button"
-                        type="button"
-                        aria-label="Archive sticky note"
-                        title="Archive sticky note"
-                        onclick={(event) => {
-                          event.stopPropagation();
-                          void archiveStickyNote(stickyNote.id);
-                        }}
-                      >
-                        <Archive
-                          size={14}
-                          strokeWidth={2.2}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-                  {/if}
+                        </button>
+                      </div>
+                    {/if}
+                  </div>
                 </div>
               {/each}
             </div>
@@ -891,7 +899,7 @@
   }
 
   .sticky-note-groups {
-    gap: 10px;
+    gap: 0;
   }
 
   .sticky-note-group {
@@ -899,8 +907,36 @@
   }
 
   .sticky-note-list {
-    gap: 10px;
+    gap: 0;
     overflow: visible;
+  }
+
+  .sticky-note-drop-zone {
+    position: relative;
+    padding: 5px 0;
+  }
+
+  .sticky-note-drop-before::before,
+  .sticky-note-drop-after::after {
+    position: absolute;
+    z-index: 6;
+    right: 0px;
+    left: 0px;
+    height: 3px;
+    border-radius: 999px;
+    background: #6d7d54;
+    content: "";
+    pointer-events: none;
+  }
+
+  .sticky-note-drop-before::before {
+    top: 0;
+    transform: translateY(-50%);
+  }
+
+  .sticky-note-drop-after::after {
+    bottom: 0;
+    transform: translateY(50%);
   }
 
   .sticky-note {
@@ -919,18 +955,6 @@
 
   .sticky-note-dragging {
     opacity: 0.48;
-  }
-
-  .sticky-note-drop-before {
-    box-shadow:
-      inset 0 3px 0 #6d7d54,
-      0 4px 10px rgba(65, 52, 22, 0.08);
-  }
-
-  .sticky-note-drop-after {
-    box-shadow:
-      inset 0 -3px 0 #6d7d54,
-      0 4px 10px rgba(65, 52, 22, 0.08);
   }
 
   .sticky-note-display {

@@ -134,6 +134,7 @@ StickyNote decisions:
 - Sticky Notes use a group-scoped `position` for ordering.
 - Pinned Sticky Notes are shown before unpinned Sticky Notes.
 - Reordering is limited to the current pin group and never changes pin state.
+- Pointer reordering uses Pragmatic Drag and Drop with a dedicated drag handle.
 - Pinning or unpinning a StickyNote moves it to the top of the destination group.
 
 ---
