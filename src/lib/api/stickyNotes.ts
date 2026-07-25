@@ -6,6 +6,7 @@ export type StickyNote = {
   createdAtMs: number;
   updatedAtMs: number;
   pinnedAtMs: number | null;
+  position: number;
   archivedAtMs: number | null;
 };
 
@@ -14,7 +15,7 @@ export function listStickyNotes() {
 }
 
 export function createStickyNote(body: string, nowMs: number) {
-  return invoke<StickyNote>("create_sticky_note", { body, nowMs });
+  return invoke<StickyNote[]>("create_sticky_note", { body, nowMs });
 }
 
 export function updateStickyNoteBody(id: number, body: string, nowMs: number) {
@@ -22,13 +23,20 @@ export function updateStickyNoteBody(id: number, body: string, nowMs: number) {
 }
 
 export function archiveStickyNote(id: number, nowMs: number) {
-  return invoke<StickyNote>("archive_sticky_note", { id, nowMs });
+  return invoke<StickyNote[]>("archive_sticky_note", { id, nowMs });
 }
 
 export function pinStickyNote(id: number, nowMs: number) {
-  return invoke<StickyNote>("pin_sticky_note", { id, nowMs });
+  return invoke<StickyNote[]>("pin_sticky_note", { id, nowMs });
 }
 
 export function unpinStickyNote(id: number, nowMs: number) {
-  return invoke<StickyNote>("unpin_sticky_note", { id, nowMs });
+  return invoke<StickyNote[]>("unpin_sticky_note", { id, nowMs });
+}
+
+export function reorderStickyNote(id: number, targetPosition: number) {
+  return invoke<StickyNote[]>("reorder_sticky_note", {
+    id,
+    targetPosition,
+  });
 }

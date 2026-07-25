@@ -6,6 +6,10 @@ const MIGRATIONS: &[(u32, &str)] = &[
         2,
         include_str!("../../migrations/002_create_sticky_notes.sql"),
     ),
+    (
+        3,
+        include_str!("../../migrations/003_add_sticky_note_position.sql"),
+    ),
 ];
 
 pub fn apply(connection: &mut Connection) -> Result<(), String> {
@@ -77,7 +81,7 @@ mod tests {
             )
             .expect("read table counts");
 
-        assert_eq!(version, 2);
+        assert_eq!(version, 3);
         assert_eq!(daily_notes_table_count, 1);
         assert_eq!(sticky_notes_table_count, 1);
     }
@@ -106,7 +110,63 @@ mod tests {
             .query_row("SELECT COUNT(*) FROM daily_notes", [], |row| row.get(0))
             .expect("read daily note count");
 
-        assert_eq!(version, 2);
+        assert_eq!(version, 3);
         assert_eq!(daily_note_count, 1);
+    }
+
+    #[test]
+    fn preserves_existing_sticky_note_order_when_adding_positions() {
+        let mut connection = Connection::open_in_memory().expect("open in-memory database");
+
+        connection
+            .execute_batch(MIGRATIONS[0].1)
+            .expect("apply initial migration");
+        connection
+            .execute_batch(MIGRATIONS[1].1)
+            .expect("apply StickyNote migration");
+        connection
+            .execute_batch(
+                "
+                INSERT INTO sticky_notes
+                    (body, created_at_ms, updated_at_ms, pinned_at_ms, archived_at_ms)
+                VALUES
+                    ('Unpinned older', 1000, 1000, NULL, NULL),
+                    ('Pinned older', 2000, 3000, 3000, NULL),
+                    ('Unpinned newer', 4000, 4000, NULL, NULL),
+                    ('Pinned newer', 1500, 5000, 5000, NULL),
+                    ('Archived', 6000, 7000, NULL, 7000);
+                PRAGMA user_version = 2;
+                ",
+            )
+            .expect("insert v2 StickyNotes");
+
+        apply(&mut connection).expect("apply position migration");
+
+        let sticky_notes = connection
+            .prepare(
+                "
+                SELECT body, position
+                FROM sticky_notes
+                WHERE archived_at_ms IS NULL
+                ORDER BY pinned_at_ms IS NULL ASC, position ASC, id ASC
+                ",
+            )
+            .expect("prepare StickyNote order query")
+            .query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            })
+            .expect("query migrated StickyNotes")
+            .collect::<Result<Vec<_>, _>>()
+            .expect("read migrated StickyNotes");
+
+        assert_eq!(
+            sticky_notes,
+            vec![
+                ("Pinned newer".to_string(), 0),
+                ("Pinned older".to_string(), 1),
+                ("Unpinned newer".to_string(), 0),
+                ("Unpinned older".to_string(), 1),
+            ]
+        );
     }
 }
