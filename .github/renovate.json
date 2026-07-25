@@ -34,6 +34,10 @@
       ],
       "groupName": "Tauri packages",
       "minimumReleaseAge": "14 days"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
     }
   ]
 }
