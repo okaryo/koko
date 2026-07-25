@@ -31,20 +31,21 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check formatting
-        run: pnpm run format:check
+      - parallel:
+          - name: Check formatting
+            run: pnpm run format:check
 
-      - name: Lint frontend
-        run: pnpm run lint
+          - name: Lint frontend
+            run: pnpm run lint
 
-      - name: Type check frontend
-        run: pnpm run check
+          - name: Type check frontend
+            run: pnpm run check
 
-      - name: Test frontend
-        run: pnpm test
+          - name: Test frontend
+            run: pnpm test
 
-      - name: Build frontend
-        run: pnpm run build
+          - name: Build frontend
+            run: pnpm run build
 
   rust:
     name: Rust
@@ -73,11 +74,12 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Check Rust formatting
-        run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+      - parallel:
+          - name: Check Rust formatting
+            run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 
-      - name: Lint Rust
-        run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked -- -D warnings
+          - name: Lint Rust
+            run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked -- -D warnings
 
-      - name: Test Rust
-        run: cargo test --manifest-path src-tauri/Cargo.toml --locked
+          - name: Test Rust
+            run: cargo test --manifest-path src-tauri/Cargo.toml --locked
