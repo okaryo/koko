@@ -16,6 +16,7 @@
   import { overlayScrollbars } from "$lib/actions/overlayScrollbars";
   import { insertMarkdownListContinuation } from "$lib/editor/textareaMarkdown";
   import { stickyNoteCommandFromKeydown } from "$lib/keyboard";
+  import { scrollAdjustmentToRevealStickyNote } from "$lib/stickyNoteScroll";
   import { disableAutocorrect } from "$lib/textAssist";
 
   let stickyNotes = $state<StickyNote[]>([]);
@@ -391,8 +392,21 @@
 
   function autoResizeTextarea(textarea: HTMLTextAreaElement) {
     const resize = () => {
+      const initialScrollTop = stickyNotesViewportElement?.scrollTop;
+
       textarea.style.height = "auto";
       textarea.style.height = `${textarea.scrollHeight}px`;
+
+      if (!textarea.dataset.stickyNoteEditId) {
+        return;
+      }
+
+      // Resizing a focused textarea can move its scroll container unexpectedly.
+      restoreStickyNotesScrollTop(initialScrollTop);
+      requestAnimationFrame(() => {
+        restoreStickyNotesScrollTop(initialScrollTop);
+        revealEditingStickyNote(textarea);
+      });
     };
     const animationFrame = requestAnimationFrame(resize);
 
@@ -404,6 +418,31 @@
         textarea.removeEventListener("input", resize);
       },
     };
+  }
+
+  function revealEditingStickyNote(textarea: HTMLTextAreaElement) {
+    const viewport = stickyNotesViewportElement;
+    const stickyNote = textarea.closest<HTMLElement>(".sticky-note");
+
+    if (!viewport || !stickyNote) {
+      return;
+    }
+
+    const viewportRect = viewport.getBoundingClientRect();
+    const stickyNoteRect = stickyNote.getBoundingClientRect();
+    const viewportTop = viewportRect.top + viewport.clientTop;
+    const scrollAdjustment = scrollAdjustmentToRevealStickyNote(
+      {
+        top: viewportTop,
+        bottom: viewportTop + viewport.clientHeight,
+      },
+      {
+        top: stickyNoteRect.top,
+        bottom: stickyNoteRect.bottom,
+      },
+    );
+
+    viewport.scrollTop += scrollAdjustment;
   }
 </script>
 
