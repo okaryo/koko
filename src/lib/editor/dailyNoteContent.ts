@@ -8,6 +8,7 @@ export async function htmlFromDailyNoteMarkdown(markdown: string) {
     return "";
   }
 
+  const normalizedMarkdown = normalizeEmptyListItemMarkers(markdown);
   const [
     { Editor, Extension: TiptapExtension },
     { default: StarterKit },
@@ -23,7 +24,7 @@ export async function htmlFromDailyNoteMarkdown(markdown: string) {
   ]);
 
   const editor = new Editor({
-    content: markdown,
+    content: normalizedMarkdown,
     contentType: "markdown",
     extensions: dailyNoteExtensions(
       TiptapExtension,
@@ -38,6 +39,10 @@ export async function htmlFromDailyNoteMarkdown(markdown: string) {
   editor.destroy();
 
   return html === "<p></p>" ? "" : html;
+}
+
+export function normalizeEmptyListItemMarkers(markdown: string) {
+  return markdown.replace(/^([ \t]*[-+*])[ \t]+(?=\r?$)/gm, "$1");
 }
 
 export function dailyNoteExtensions(
