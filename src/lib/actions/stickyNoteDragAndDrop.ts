@@ -4,6 +4,7 @@ import {
   monitorForElements,
   type ElementEventBasePayload,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { preventUnhandled } from "@atlaskit/pragmatic-drag-and-drop/prevent-unhandled";
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -118,6 +119,7 @@ export function monitorStickyNoteDragAndDrop(
     canMonitor: ({ source }) => isStickyNoteDragData(source.data),
     onDragStart: ({ source }) => {
       if (isStickyNoteDragData(source.data)) {
+        preventUnhandled.start();
         callbacks.onDragStart(source.data.stickyNoteId);
       }
     },
@@ -156,6 +158,15 @@ export function stickyNoteDragHandle(
     return;
   }
 
+  function handleDragStart(event: DragEvent) {
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.dropEffect = "move";
+    }
+  }
+
+  handleElement.addEventListener("dragstart", handleDragStart);
+
   const cleanup = draggable({
     element: handleElement,
     getInitialData: () => stickyNoteDragData(parameters.stickyNote),
@@ -180,6 +191,7 @@ export function stickyNoteDragHandle(
       parameters = nextParameters;
     },
     destroy() {
+      handleElement.removeEventListener("dragstart", handleDragStart);
       cleanup();
     },
   };
