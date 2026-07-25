@@ -1,9 +1,7 @@
 export type PomodoroCommand = "toggle" | "reset";
 export type DailyNoteCommand = "focus" | "insertTimestamp" | "copyMarkdown";
 export type AppCommand =
-  | "toggleKeyboardHelp"
-  | "goToPreviousDailyNote"
-  | "goToNextDailyNote";
+  "toggleKeyboardHelp" | "goToPreviousDailyNote" | "goToNextDailyNote";
 export type StickyNoteCommand = "focusCreate";
 
 export function pomodoroCommandFromKeydown(

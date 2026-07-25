@@ -25,12 +25,7 @@
 
   type DailyNoteSaveStatus = "idle" | "saving" | "saved" | "error";
   type UpdateState =
-    | "unavailable"
-    | "checking"
-    | "idle"
-    | "available"
-    | "installing"
-    | "error";
+    "unavailable" | "checking" | "idle" | "available" | "installing" | "error";
 
   const UPDATE_CHECK_COOLDOWN_MS = 24 * 60 * 60 * 1000;
   let dailyNoteHtml = $state("");
