@@ -8,5 +8,6 @@ pub struct StickyNote {
     pub created_at_ms: i64,
     pub updated_at_ms: i64,
     pub pinned_at_ms: Option<i64>,
+    pub position: i64,
     pub archived_at_ms: Option<i64>,
 }

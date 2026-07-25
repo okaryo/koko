@@ -112,6 +112,7 @@ Daily workspace decisions:
 - [x] Archive StickyNote
 - [x] Pin StickyNote
 - [x] Unpin StickyNote
+- [x] Reorder StickyNotes within their pin group
 - [x] Add keyboard shortcut for creating a StickyNote
 - [x] Keep existing StickyNote management mouse-first
 
@@ -129,8 +130,12 @@ StickyNote decisions:
 - Existing Sticky Notes are pinned or unpinned by using the hover action.
 - Existing Sticky Notes are archived by using the hover action.
 - Sticky Notes do not have a selected state in `v0.1.0`.
-- Sticky Notes use `pinnedAtMs` to represent pin state and pinned ordering.
-- Pinned Sticky Notes are shown before unpinned Sticky Notes, newest pinned first.
+- Sticky Notes use `pinnedAtMs` to represent pin state.
+- Sticky Notes use a group-scoped `position` for ordering.
+- Pinned Sticky Notes are shown before unpinned Sticky Notes.
+- Reordering is limited to the current pin group and never changes pin state.
+- Pointer reordering uses Pragmatic Drag and Drop with a dedicated drag handle.
+- Pinning or unpinning a StickyNote moves it to the top of the destination group.
 
 ---
 

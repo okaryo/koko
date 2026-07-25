@@ -11,10 +11,14 @@ pub fn list_sticky_notes(app: AppHandle) -> Result<Vec<StickyNote>, String> {
 }
 
 #[tauri::command]
-pub fn create_sticky_note(app: AppHandle, body: String, now_ms: i64) -> Result<StickyNote, String> {
-    let connection = db::open(&app)?;
+pub fn create_sticky_note(
+    app: AppHandle,
+    body: String,
+    now_ms: i64,
+) -> Result<Vec<StickyNote>, String> {
+    let mut connection = db::open(&app)?;
 
-    repository::create(&connection, body.trim(), now_ms)
+    repository::create(&mut connection, body.trim(), now_ms)
 }
 
 #[tauri::command]
@@ -30,22 +34,37 @@ pub fn update_sticky_note_body(
 }
 
 #[tauri::command]
-pub fn archive_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<StickyNote, String> {
-    let connection = db::open(&app)?;
+pub fn archive_sticky_note(
+    app: AppHandle,
+    id: u32,
+    now_ms: i64,
+) -> Result<Vec<StickyNote>, String> {
+    let mut connection = db::open(&app)?;
 
-    repository::archive(&connection, id, now_ms)
+    repository::archive(&mut connection, id, now_ms)
 }
 
 #[tauri::command]
-pub fn pin_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<StickyNote, String> {
-    let connection = db::open(&app)?;
+pub fn pin_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<Vec<StickyNote>, String> {
+    let mut connection = db::open(&app)?;
 
-    repository::pin(&connection, id, now_ms)
+    repository::pin(&mut connection, id, now_ms)
 }
 
 #[tauri::command]
-pub fn unpin_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<StickyNote, String> {
-    let connection = db::open(&app)?;
+pub fn unpin_sticky_note(app: AppHandle, id: u32, now_ms: i64) -> Result<Vec<StickyNote>, String> {
+    let mut connection = db::open(&app)?;
 
-    repository::unpin(&connection, id, now_ms)
+    repository::unpin(&mut connection, id, now_ms)
+}
+
+#[tauri::command]
+pub fn reorder_sticky_note(
+    app: AppHandle,
+    id: u32,
+    target_position: i64,
+) -> Result<Vec<StickyNote>, String> {
+    let mut connection = db::open(&app)?;
+
+    repository::reorder(&mut connection, id, target_position)
 }
