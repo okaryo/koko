@@ -759,9 +759,6 @@
   }
 
   :global(.daily-note-editor ul[data-type="taskList"]) {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
     list-style: none;
     padding-left: 0;
   }
@@ -770,7 +767,6 @@
     display: flex;
     align-items: flex-start;
     gap: 0.45rem;
-    max-width: 100%;
   }
 
   :global(
@@ -863,9 +859,8 @@
   :global(
     .daily-note-editor ul[data-type="taskList"] > li[data-checked] > div
   ) {
-    flex: 0 1 auto;
-    min-width: 1px;
-    max-width: calc(100% - 18px - 0.45rem);
+    flex: 1;
+    min-width: 0;
   }
 
   :global(
