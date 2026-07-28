@@ -1,6 +1,6 @@
 {
   "name": "koko",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "A simple desktop app for staying with the work in front of you",
   "type": "module",
   "packageManager": "pnpm@11.17.0",
