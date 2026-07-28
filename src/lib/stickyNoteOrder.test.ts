@@ -13,6 +13,7 @@ function stickyNote(id: number, position: number, pinned = false): StickyNote {
   return {
     id,
     body: `Note ${id}`,
+    color: "yellow",
     createdAtMs: id,
     updatedAtMs: id,
     pinnedAtMs: pinned ? id : null,

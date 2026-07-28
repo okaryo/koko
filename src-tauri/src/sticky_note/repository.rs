@@ -8,6 +8,7 @@ pub fn list_active(connection: &Connection) -> Result<Vec<StickyNote>, String> {
             SELECT
                 id,
                 body,
+                color,
                 created_at_ms,
                 updated_at_ms,
                 pinned_at_ms,
@@ -96,6 +97,36 @@ pub fn update_body(
             params![body, now_ms, id],
         )
         .map_err(|error| format!("Failed to update StickyNote: {error}"))?;
+
+    if updated_rows == 0 {
+        return Err(format!("Active StickyNote {id} was not found."));
+    }
+
+    find_by_id(connection, id)?.ok_or_else(|| format!("StickyNote {id} was not found."))
+}
+
+pub fn update_color(
+    connection: &Connection,
+    id: u32,
+    color: &str,
+    now_ms: i64,
+) -> Result<StickyNote, String> {
+    if !matches!(color, "yellow" | "pink" | "blue" | "green") {
+        return Err(format!("Unsupported StickyNote color: {color}."));
+    }
+
+    let updated_rows = connection
+        .execute(
+            "
+            UPDATE sticky_notes
+            SET color = ?1,
+                updated_at_ms = ?2
+            WHERE id = ?3
+              AND archived_at_ms IS NULL
+            ",
+            params![color, now_ms, id],
+        )
+        .map_err(|error| format!("Failed to update StickyNote color: {error}"))?;
 
     if updated_rows == 0 {
         return Err(format!("Active StickyNote {id} was not found."));
@@ -310,6 +341,7 @@ fn find_by_id(connection: &Connection, id: u32) -> Result<Option<StickyNote>, St
             SELECT
                 id,
                 body,
+                color,
                 created_at_ms,
                 updated_at_ms,
                 pinned_at_ms,
@@ -344,11 +376,12 @@ fn row_to_sticky_note(row: &rusqlite::Row<'_>) -> rusqlite::Result<StickyNote> {
     Ok(StickyNote {
         id: row.get(0)?,
         body: row.get(1)?,
-        created_at_ms: row.get(2)?,
-        updated_at_ms: row.get(3)?,
-        pinned_at_ms: row.get(4)?,
-        position: row.get(5)?,
-        archived_at_ms: row.get(6)?,
+        color: row.get(2)?,
+        created_at_ms: row.get(3)?,
+        updated_at_ms: row.get(4)?,
+        pinned_at_ms: row.get(5)?,
+        position: row.get(6)?,
+        archived_at_ms: row.get(7)?,
     })
 }
 
@@ -498,6 +531,7 @@ mod tests {
         assert_eq!(group_positions(&sticky_notes, false), vec![0, 1]);
         assert_eq!(newer.created_at_ms, 2000);
         assert_eq!(newer.updated_at_ms, 2000);
+        assert_eq!(newer.color, "yellow");
         assert_eq!(newer.pinned_at_ms, None);
         assert_eq!(newer.archived_at_ms, None);
     }
@@ -533,6 +567,35 @@ mod tests {
         assert_eq!(updated.pinned_at_ms, None);
         assert_eq!(updated.position, 0);
         assert_eq!(updated.archived_at_ms, None);
+    }
+
+    #[test]
+    fn updates_sticky_note_color() {
+        let mut connection = migrated_connection();
+        let sticky_note = create_one(&mut connection, "Colored", 1000);
+
+        let updated =
+            update_color(&connection, sticky_note.id, "pink", 2000).expect("update color");
+
+        assert_eq!(updated.color, "pink");
+        assert_eq!(updated.updated_at_ms, 2000);
+        assert_eq!(updated.body, "Colored");
+    }
+
+    #[test]
+    fn rejects_an_unsupported_sticky_note_color() {
+        let mut connection = migrated_connection();
+        let sticky_note = create_one(&mut connection, "Unchanged", 1000);
+
+        let error = update_color(&connection, sticky_note.id, "purple", 2000)
+            .expect_err("reject unsupported color");
+        let unchanged = find_by_id(&connection, sticky_note.id)
+            .expect("read StickyNote")
+            .expect("find StickyNote");
+
+        assert!(error.contains("Unsupported"));
+        assert_eq!(unchanged.color, "yellow");
+        assert_eq!(unchanged.updated_at_ms, 1000);
     }
 
     #[test]
