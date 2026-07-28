@@ -1233,8 +1233,12 @@
   }
 
   .sticky-note-color-swatch {
+    flex: 0 0 22px;
     width: 22px;
+    min-width: 22px;
     height: 22px;
+    min-height: 22px;
+    aspect-ratio: 1;
     padding: 0;
     border: 2px solid transparent;
     border-radius: 50%;
