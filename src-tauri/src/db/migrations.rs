@@ -10,6 +10,10 @@ const MIGRATIONS: &[(u32, &str)] = &[
         3,
         include_str!("../../migrations/003_add_sticky_note_position.sql"),
     ),
+    (
+        4,
+        include_str!("../../migrations/004_add_sticky_note_color.sql"),
+    ),
 ];
 
 pub fn apply(connection: &mut Connection) -> Result<(), String> {
@@ -81,7 +85,7 @@ mod tests {
             )
             .expect("read table counts");
 
-        assert_eq!(version, 3);
+        assert_eq!(version, 4);
         assert_eq!(daily_notes_table_count, 1);
         assert_eq!(sticky_notes_table_count, 1);
     }
@@ -110,7 +114,7 @@ mod tests {
             .query_row("SELECT COUNT(*) FROM daily_notes", [], |row| row.get(0))
             .expect("read daily note count");
 
-        assert_eq!(version, 3);
+        assert_eq!(version, 4);
         assert_eq!(daily_note_count, 1);
     }
 
@@ -168,5 +172,41 @@ mod tests {
                 ("Unpinned older".to_string(), 1),
             ]
         );
+    }
+
+    #[test]
+    fn gives_existing_sticky_notes_the_default_color() {
+        let mut connection = Connection::open_in_memory().expect("open in-memory database");
+
+        for (_, migration) in &MIGRATIONS[..3] {
+            connection
+                .execute_batch(migration)
+                .expect("apply migration before StickyNote colors");
+        }
+        connection
+            .execute(
+                "
+                INSERT INTO sticky_notes
+                    (body, created_at_ms, updated_at_ms, pinned_at_ms, position, archived_at_ms)
+                VALUES ('Existing', 1000, 1000, NULL, 0, NULL)
+                ",
+                [],
+            )
+            .expect("insert existing StickyNote");
+        connection
+            .pragma_update(None, "user_version", 3)
+            .expect("set schema version");
+
+        apply(&mut connection).expect("apply StickyNote color migration");
+
+        let color: String = connection
+            .query_row(
+                "SELECT color FROM sticky_notes WHERE body = 'Existing'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("read migrated StickyNote color");
+
+        assert_eq!(color, "yellow");
     }
 }

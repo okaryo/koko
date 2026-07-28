@@ -5,6 +5,7 @@ use serde::Serialize;
 pub struct StickyNote {
     pub id: u32,
     pub body: String,
+    pub color: String,
     pub created_at_ms: i64,
     pub updated_at_ms: i64,
     pub pinned_at_ms: Option<i64>,

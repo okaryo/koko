@@ -34,6 +34,18 @@ pub fn update_sticky_note_body(
 }
 
 #[tauri::command]
+pub fn update_sticky_note_color(
+    app: AppHandle,
+    id: u32,
+    color: String,
+    now_ms: i64,
+) -> Result<StickyNote, String> {
+    let connection = db::open(&app)?;
+
+    repository::update_color(&connection, id, &color, now_ms)
+}
+
+#[tauri::command]
 pub fn archive_sticky_note(
     app: AppHandle,
     id: u32,

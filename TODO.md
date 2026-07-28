@@ -113,6 +113,7 @@ Daily workspace decisions:
 - [x] Pin StickyNote
 - [x] Unpin StickyNote
 - [x] Reorder StickyNotes within their pin group
+- [x] Change a StickyNote color
 - [x] Add keyboard shortcut for creating a StickyNote
 - [x] Keep existing StickyNote management mouse-first
 
@@ -136,6 +137,8 @@ StickyNote decisions:
 - Reordering is limited to the current pin group and never changes pin state.
 - Pointer reordering uses Pragmatic Drag and Drop with a dedicated drag handle.
 - Pinning or unpinning a StickyNote moves it to the top of the destination group.
+- Sticky Notes default to yellow and offer a small palette of yellow, pink, blue, and green.
+- A StickyNote color is persisted per note.
 
 ---
 

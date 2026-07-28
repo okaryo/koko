@@ -1,8 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 
+export type StickyNoteColor = "yellow" | "pink" | "blue" | "green";
+
 export type StickyNote = {
   id: number;
   body: string;
+  color: StickyNoteColor;
   createdAtMs: number;
   updatedAtMs: number;
   pinnedAtMs: number | null;
@@ -20,6 +23,14 @@ export function createStickyNote(body: string, nowMs: number) {
 
 export function updateStickyNoteBody(id: number, body: string, nowMs: number) {
   return invoke<StickyNote>("update_sticky_note_body", { id, body, nowMs });
+}
+
+export function updateStickyNoteColor(
+  id: number,
+  color: StickyNoteColor,
+  nowMs: number,
+) {
+  return invoke<StickyNote>("update_sticky_note_color", { id, color, nowMs });
 }
 
 export function archiveStickyNote(id: number, nowMs: number) {

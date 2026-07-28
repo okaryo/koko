@@ -2,6 +2,7 @@
   import { onMount, tick } from "svelte";
   import Archive from "@lucide/svelte/icons/archive";
   import GripVertical from "@lucide/svelte/icons/grip-vertical";
+  import Palette from "@lucide/svelte/icons/palette";
   import PinIcon from "@lucide/svelte/icons/pin";
   import PinOff from "@lucide/svelte/icons/pin-off";
   import Plus from "@lucide/svelte/icons/plus";
@@ -12,8 +13,10 @@
     pinStickyNote as pinPersistedStickyNote,
     reorderStickyNote as reorderPersistedStickyNote,
     type StickyNote,
+    type StickyNoteColor,
     unpinStickyNote as unpinPersistedStickyNote,
     updateStickyNoteBody,
+    updateStickyNoteColor,
   } from "$lib/api/stickyNotes";
   import { overlayScrollbars } from "$lib/actions/overlayScrollbars";
   import {
@@ -37,6 +40,38 @@
   import { scrollAdjustmentToRevealStickyNote } from "$lib/stickyNoteScroll";
   import { disableAutocorrect } from "$lib/textAssist";
 
+  const stickyNoteColors: {
+    value: StickyNoteColor;
+    label: string;
+    background: string;
+    fold: string;
+  }[] = [
+    {
+      value: "yellow",
+      label: "Yellow",
+      background: "#ffe37a",
+      fold: "#c99f24",
+    },
+    {
+      value: "pink",
+      label: "Pink",
+      background: "#ffcbd8",
+      fold: "#d88398",
+    },
+    {
+      value: "blue",
+      label: "Blue",
+      background: "#cbe7f5",
+      fold: "#7ba8bd",
+    },
+    {
+      value: "green",
+      label: "Green",
+      background: "#d8edb5",
+      fold: "#98b56b",
+    },
+  ];
+
   let stickyNotes = $state<StickyNote[]>([]);
   let newStickyNoteBody = $state("");
   let newStickyNoteTextareaElement = $state<HTMLTextAreaElement>();
@@ -44,6 +79,7 @@
   let composerOpen = $state(false);
   let editingStickyNoteId = $state<number | null>(null);
   let editingStickyNoteBody = $state("");
+  let colorPickerStickyNoteId = $state<number | null>(null);
   let draggedStickyNoteId = $state<number | null>(null);
   let dropTarget = $state<StickyNoteDropTarget | null>(null);
   let reorderAnnouncement = $state("");
@@ -116,6 +152,7 @@
     try {
       await reorderQueue;
       stickyNotes = await archivePersistedStickyNote(id, Date.now());
+      colorPickerStickyNoteId = null;
     } catch (error) {
       console.warn("StickyNote archive failed", error);
     }
@@ -130,6 +167,42 @@
           : await unpinPersistedStickyNote(stickyNote.id, Date.now());
     } catch (error) {
       console.warn("StickyNote pin toggle failed", error);
+    }
+  }
+
+  function stickyNoteColorStyle(color: StickyNoteColor) {
+    const selectedColor =
+      stickyNoteColors.find((option) => option.value === color) ??
+      stickyNoteColors[0];
+
+    return `--sticky-note-background: ${selectedColor.background}; --sticky-note-fold: ${selectedColor.fold}`;
+  }
+
+  function toggleColorPicker(stickyNoteId: number) {
+    colorPickerStickyNoteId =
+      colorPickerStickyNoteId === stickyNoteId ? null : stickyNoteId;
+  }
+
+  async function changeStickyNoteColor(
+    stickyNote: StickyNote,
+    color: StickyNoteColor,
+  ) {
+    colorPickerStickyNoteId = null;
+
+    if (stickyNote.color === color) {
+      return;
+    }
+
+    try {
+      const updatedStickyNote = await updateStickyNoteColor(
+        stickyNote.id,
+        color,
+        Date.now(),
+      );
+
+      upsertStickyNote(updatedStickyNote);
+    } catch (error) {
+      console.warn("StickyNote color update failed", error);
     }
   }
 
@@ -149,6 +222,7 @@
 
     editingStickyNoteId = stickyNote.id;
     editingStickyNoteBody = stickyNote.body;
+    colorPickerStickyNoteId = null;
 
     void tick().then(() => {
       const editTextarea = document.querySelector<HTMLTextAreaElement>(
@@ -709,6 +783,7 @@
                 >
                   <div
                     id={`sticky-note-${stickyNote.id}`}
+                    style={stickyNoteColorStyle(stickyNote.color)}
                     class={`sticky-note ${
                       editingStickyNoteId !== stickyNote.id
                         ? "sticky-note-display"
@@ -769,6 +844,29 @@
                         </button>
                         <button
                           class={`icon-button sticky-note-action-button ${
+                            colorPickerStickyNoteId === stickyNote.id
+                              ? "sticky-note-action-button-active"
+                              : ""
+                          }`}
+                          type="button"
+                          aria-label="Change sticky note color"
+                          aria-expanded={colorPickerStickyNoteId ===
+                            stickyNote.id}
+                          aria-controls={`sticky-note-color-picker-${stickyNote.id}`}
+                          title="Change sticky note color"
+                          onclick={(event) => {
+                            event.stopPropagation();
+                            toggleColorPicker(stickyNote.id);
+                          }}
+                        >
+                          <Palette
+                            size={14}
+                            strokeWidth={2.2}
+                            aria-hidden="true"
+                          />
+                        </button>
+                        <button
+                          class={`icon-button sticky-note-action-button ${
                             stickyNote.pinnedAtMs !== null
                               ? "sticky-note-action-button-active"
                               : ""
@@ -815,6 +913,33 @@
                             aria-hidden="true"
                           />
                         </button>
+                        {#if colorPickerStickyNoteId === stickyNote.id}
+                          <div
+                            id={`sticky-note-color-picker-${stickyNote.id}`}
+                            class="sticky-note-color-picker"
+                            aria-label="Sticky note color"
+                          >
+                            {#each stickyNoteColors as color (color.value)}
+                              <button
+                                class="sticky-note-color-swatch"
+                                class:sticky-note-color-swatch-active={stickyNote.color ===
+                                  color.value}
+                                type="button"
+                                aria-label={color.label}
+                                aria-pressed={stickyNote.color === color.value}
+                                title={color.label}
+                                style={`--swatch-color: ${color.background}`}
+                                onclick={(event) => {
+                                  event.stopPropagation();
+                                  void changeStickyNoteColor(
+                                    stickyNote,
+                                    color.value,
+                                  );
+                                }}
+                              ></button>
+                            {/each}
+                          </div>
+                        {/if}
                       </div>
                     {/if}
                   </div>
@@ -940,6 +1065,9 @@
   }
 
   .sticky-note {
+    --sticky-note-background: #ffe37a;
+    --sticky-note-fold: #c99f24;
+
     position: relative;
     display: flex;
     flex-direction: column;
@@ -948,7 +1076,7 @@
     padding: 12px;
     box-shadow: 0 4px 10px rgba(65, 52, 22, 0.08);
     border-radius: 6px;
-    background: #ffe37a;
+    background: var(--sticky-note-background);
     cursor: text;
     overflow: hidden;
   }
@@ -999,8 +1127,8 @@
     border-radius: 0 0 0 4px;
     background: linear-gradient(
       45deg,
-      #c99f24,
-      #c99f24 50%,
+      var(--sticky-note-fold),
+      var(--sticky-note-fold) 50%,
       #fffcf6 50%,
       #fffcf6
     );
@@ -1040,7 +1168,7 @@
     width: 28px;
     min-width: 28px;
     height: 28px;
-    background: rgba(255, 246, 188, 0.72);
+    background: rgba(255, 255, 255, 0.52);
     cursor: pointer;
   }
 
@@ -1089,6 +1217,48 @@
     gap: 4px;
     opacity: 0;
     transition: opacity 120ms ease;
+  }
+
+  .sticky-note-color-picker {
+    position: absolute;
+    top: 34px;
+    right: 0;
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid rgba(74, 68, 56, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 252, 246, 0.96);
+    box-shadow: 0 4px 12px rgba(65, 52, 22, 0.14);
+  }
+
+  .sticky-note-color-swatch {
+    flex: 0 0 22px;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: var(--swatch-color);
+    box-shadow: inset 0 0 0 1px rgba(74, 68, 56, 0.12);
+  }
+
+  .sticky-note-color-swatch:hover {
+    border-color: rgba(74, 68, 56, 0.32);
+    background: var(--swatch-color);
+  }
+
+  .sticky-note-color-swatch-active,
+  .sticky-note-color-swatch-active:hover {
+    border-color: #4a4438;
+  }
+
+  .sticky-note-color-swatch:focus-visible {
+    outline: 2px solid rgba(89, 113, 62, 0.48);
+    outline-offset: 2px;
   }
 
   .sticky-note:hover .sticky-note-actions,

@@ -32,6 +32,7 @@ pub fn run() {
             sticky_note::commands::list_sticky_notes,
             sticky_note::commands::create_sticky_note,
             sticky_note::commands::update_sticky_note_body,
+            sticky_note::commands::update_sticky_note_color,
             sticky_note::commands::archive_sticky_note,
             sticky_note::commands::pin_sticky_note,
             sticky_note::commands::unpin_sticky_note,
