@@ -15,7 +15,7 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       '@lucide/svelte':
-        specifier: ^1.24.0
+        specifier: ^1.25.0
         version: 1.26.0(svelte@5.56.4(@typescript-eslint/types@8.65.0))
       '@tauri-apps/api':
         specifier: ^2.11.1
@@ -33,25 +33,25 @@ importers:
         specifier: ~2.10.1
         version: 2.10.1
       '@tiptap/core':
-        specifier: ^3.27.3
+        specifier: ^3.28.0
         version: 3.29.0(@tiptap/pm@3.29.0)
       '@tiptap/extension-placeholder':
-        specifier: ^3.27.3
+        specifier: ^3.28.0
         version: 3.29.0(@tiptap/extensions@3.29.0(@tiptap/core@3.29.0(@tiptap/pm@3.29.0))(@tiptap/pm@3.29.0))
       '@tiptap/extension-task-item':
-        specifier: ^3.27.3
+        specifier: ^3.28.0
         version: 3.29.0(@tiptap/extension-list@3.29.0(@tiptap/core@3.29.0(@tiptap/pm@3.29.0))(@tiptap/pm@3.29.0))
       '@tiptap/extension-task-list':
-        specifier: ^3.27.3
+        specifier: ^3.28.0
         version: 3.29.0(@tiptap/extension-list@3.29.0(@tiptap/core@3.29.0(@tiptap/pm@3.29.0))(@tiptap/pm@3.29.0))
       '@tiptap/markdown':
-        specifier: ^3.27.3
+        specifier: ^3.28.0
         version: 3.29.0(@tiptap/core@3.29.0(@tiptap/pm@3.29.0))(@tiptap/pm@3.29.0)
       '@tiptap/pm':
-        specifier: ^3.27.3
+        specifier: ^3.28.0
         version: 3.29.0
       '@tiptap/starter-kit':
-        specifier: ^3.27.3
+        specifier: ^3.28.0
         version: 3.29.0
       overlayscrollbars:
         specifier: ^2.16.0
