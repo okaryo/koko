@@ -863,6 +863,24 @@
     min-width: 0;
   }
 
+  :global(.daily-note-editor > ul[data-type="taskList"]) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  :global(.daily-note-editor > ul[data-type="taskList"] > li[data-checked]) {
+    max-width: 100%;
+  }
+
+  :global(
+    .daily-note-editor > ul[data-type="taskList"] > li[data-checked] > div
+  ) {
+    flex: 0 1 auto;
+    min-width: 1px;
+    max-width: calc(100% - 18px - 0.45rem);
+  }
+
   :global(
     .daily-note-editor ul[data-type="taskList"] > li[data-checked] > div > p
   ) {
