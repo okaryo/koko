@@ -15,6 +15,8 @@ Use this checklist before reviewing keyboard-related changes.
 - [ ] `1. ` continues as an ordered list on the next line.
 - [ ] `- [ ] ` creates an unchecked task item.
 - [ ] `- [x] ` creates a checked task item.
+- [ ] Backspace on an empty middle bullet, ordered, or task item removes the item without leaving a gap.
+- [ ] Deleting the blank line between compatible lists joins them without changing nested list content.
 
 ## Pomodoro
 

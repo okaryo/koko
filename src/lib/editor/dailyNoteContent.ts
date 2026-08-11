@@ -1,4 +1,8 @@
 import type { AnyExtension } from "@tiptap/core";
+import {
+  createAdjacentListNormalization,
+  joinAdjacentLists,
+} from "$lib/editor/adjacentListNormalization";
 import { createTaskItemKeyboard } from "$lib/editor/taskItemKeyboard";
 
 type ExtensionFactory = typeof import("@tiptap/core").Extension;
@@ -34,6 +38,7 @@ export async function htmlFromDailyNoteMarkdown(markdown: string) {
       TaskItem,
     ),
   });
+  editor.commands.command(joinAdjacentLists);
   const html = editor.getHTML();
 
   editor.destroy();
@@ -58,6 +63,7 @@ export function dailyNoteExtensions(
     taskItem.configure({
       nested: true,
     }),
+    createAdjacentListNormalization(extension),
     createTaskItemKeyboard(extension),
     markdown,
   ];
