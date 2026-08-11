@@ -27,6 +27,14 @@ timer, and as little app-shaped ceremony as possible.
 - Keyboard-first workflow
 - Local-first SQLite storage
 
+## Documentation
+
+- [Product specification](docs/product-spec.md)
+- [Feature specification](docs/feature-spec.md)
+- [Keyboard workflow](docs/keyboard-workflow.md)
+- [Persistence](docs/persistence.md)
+- [Release](docs/release.md)
+
 ## Installation
 
 koko is distributed for macOS, Windows, and Linux.

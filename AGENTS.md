@@ -60,11 +60,13 @@ UI behavior unless it is explicitly discussed.
 Use Tiptap for the DailyNote editor. The editor should support comfortable
 Markdown-like writing, but koko should not become a rich document editor.
 
-The initial release target is `v0.1.0`.
+The released product behavior documented in `docs/` is the baseline for future
+changes.
 
 ## Development Workflow
 
-Please follow `TODO.md`.
+Treat the specifications in `docs/` as the source of truth for current product
+behavior. Update the relevant specification when behavior changes.
 
 Before making large changes:
 
@@ -139,12 +141,12 @@ core experience, not polish.
 
 ### 6. Stay Local-First
 
-Initial persistence should be local.
+Persistence should remain local.
 
 Do not introduce cloud sync, accounts, team collaboration, or remote storage
 without explicit product discussion.
 
-Use SQLite for `v0.1.0` persistence.
+Use SQLite for DailyNote and StickyNote persistence.
 
 ## Code Style
 
@@ -157,11 +159,11 @@ Use SQLite for `v0.1.0` persistence.
 - Extract testable logic from UI components when behavior becomes meaningful
 - Avoid premature abstraction
 
-## TODO Notes
+## Specification Notes
 
-When implementing tasks from `TODO.md`:
+When implementing product changes:
 
-- update task status clearly
-- add newly decided product behavior to `TODO.md`
-- keep decisions close to the phase where they matter
+- update the relevant file in `docs/`
+- document current behavior rather than implementation progress
+- keep product decisions close to the feature they affect
 - stop and discuss if implementation reveals a better product direction
