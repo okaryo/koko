@@ -12,7 +12,7 @@ export function createTaskItemKeyboard(Extension: ExtensionFactory) {
       const handleBackspace = () =>
         this.editor.commands.first(({ commands }) => [
           () => commands.undoInputRule(),
-          () => commands.command(deleteEmptyTaskItemBackward),
+          () => commands.command(deleteEmptyListItemBackward),
         ]);
 
       return {
@@ -30,10 +30,11 @@ export function createTaskItemKeyboard(Extension: ExtensionFactory) {
 }
 
 /**
- * Deletes an empty task item on Backspace instead of letting Tiptap lift it
- * out of the list, which would leave a blank paragraph between task items.
+ * Deletes an empty non-first list item on Backspace instead of letting Tiptap
+ * lift it out of the list, which would leave a blank paragraph between the
+ * surrounding list items.
  */
-export function deleteEmptyTaskItemBackward({ state, tr }: CommandProps) {
+export function deleteEmptyListItemBackward({ state, tr }: CommandProps) {
   const { selection } = state;
 
   if (!selection.empty) {
@@ -41,23 +42,25 @@ export function deleteEmptyTaskItemBackward({ state, tr }: CommandProps) {
   }
 
   const { $from } = selection;
-  let taskItemDepth = -1;
+  let listItemDepth = -1;
 
   for (let depth = $from.depth; depth > 0; depth -= 1) {
-    if ($from.node(depth).type.name === "taskItem") {
-      taskItemDepth = depth;
+    const nodeName = $from.node(depth).type.name;
+
+    if (nodeName === "listItem" || nodeName === "taskItem") {
+      listItemDepth = depth;
       break;
     }
   }
 
-  if (taskItemDepth < 1 || $from.parentOffset !== 0) {
+  if (listItemDepth < 1 || $from.parentOffset !== 0) {
     return false;
   }
 
-  const taskItem = $from.node(taskItemDepth);
-  const firstChild = taskItem.firstChild;
+  const listItem = $from.node(listItemDepth);
+  const firstChild = listItem.firstChild;
   const isEmpty =
-    taskItem.childCount === 1 &&
+    listItem.childCount === 1 &&
     firstChild?.type.name === "paragraph" &&
     firstChild.content.size === 0;
 
@@ -65,21 +68,18 @@ export function deleteEmptyTaskItemBackward({ state, tr }: CommandProps) {
     return false;
   }
 
-  const taskListDepth = taskItemDepth - 1;
-  const taskList = $from.node(taskListDepth);
-  const taskItemIndex = $from.index(taskListDepth);
-  const previousTaskItem =
-    taskItemIndex > 0 ? taskList.child(taskItemIndex - 1) : null;
+  const listDepth = listItemDepth - 1;
+  const list = $from.node(listDepth);
+  const listItemIndex = $from.index(listDepth);
+  const previousListItem =
+    listItemIndex > 0 ? list.child(listItemIndex - 1) : null;
 
-  if (
-    taskList.type.name !== "taskList" ||
-    previousTaskItem?.type.name !== "taskItem"
-  ) {
+  if (previousListItem?.type !== listItem.type) {
     return false;
   }
 
-  const from = $from.before(taskItemDepth);
-  const to = $from.after(taskItemDepth);
+  const from = $from.before(listItemDepth);
+  const to = $from.after(listItemDepth);
 
   tr.delete(from, to);
   tr.setSelection(Selection.near(tr.doc.resolve(from), -1));

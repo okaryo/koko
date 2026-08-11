@@ -11,6 +11,7 @@
   import type { Editor } from "@tiptap/core";
   import type {} from "@tiptap/markdown";
   import { formatLocalTime } from "$lib/date";
+  import { joinAdjacentLists } from "$lib/editor/adjacentListNormalization";
   import {
     looksLikeMarkdown,
     markdownFromTiptapJson,
@@ -118,6 +119,8 @@
           onBodyChange(updatedEditor.getHTML());
         },
       });
+
+      editor.commands.command(joinAdjacentLists);
 
       focusEditorAtStart();
     }
