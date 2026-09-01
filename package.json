@@ -3,7 +3,7 @@
   "version": "0.6.2",
   "description": "A simple desktop app for staying with the work in front of you",
   "type": "module",
-  "packageManager": "pnpm@11.18.0",
+  "packageManager": "pnpm@11.25.0",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
